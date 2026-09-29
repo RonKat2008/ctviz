@@ -1,5 +1,8 @@
 # ctviz
 
+**Demo video (2.5 min):** [watch on Google Drive](https://drive.google.com/file/d/1DnCL9A0Yw9TySxYY96eS8LRgyNGSmrOc/view?usp=sharing) — me running questions through the
+web UI and explaining the answers.
+
 ## 1. What it is
 
 `ctviz` is a FastAPI backend that takes a natural-language question about clinical trials (plus
@@ -36,7 +39,7 @@ make run                      # uvicorn on http://127.0.0.1:8000 (with --reload)
 curl -s -X POST http://127.0.0.1:8000/v1/visualize \
   -H 'content-type: application/json' \
   -d '{"query": "How has the number of trials for this drug changed over time?",
-       "drug_name": "Pembrolizumab"}' | python -m json.tool | head -40
+       "drug_name": "Pembrolizumab"}' | python3 -m json.tool | head -40
 ```
 
 Other endpoints: `GET /health` (which providers are configured, as booleans; never the keys) and
@@ -1111,6 +1114,8 @@ Actual output, abridged (full: `examples/05.response.json`):
 <!-- EXAMPLES:END -->
 
 ### Web UI
+
+See it in action: [demo video](https://drive.google.com/file/d/1DnCL9A0Yw9TySxYY96eS8LRgyNGSmrOc/view?usp=sharing).
 
 <!-- WEB:START -->
 `make run` (live) or `make demo-offline` (no keys), then open <http://localhost:8000/>. The
