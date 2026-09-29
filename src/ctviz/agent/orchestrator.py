@@ -41,16 +41,19 @@ Stage = Literal[
     "no_matches",
     "judge_revise",
     "judge_pass",
+    "judge_skipped",
     "judge_unavailable",
 ]
 PlanningError = Literal["OUT_OF_SCOPE", "PLAN_INVALID", "NO_MATCHING_TRIALS"]
 _FIRST_ATTEMPT_ENDINGS: dict[Stage, JudgeStatus] = {
     "judge_pass": "passed",
+    "judge_skipped": "skipped",
     "judge_unavailable": "unavailable",
 }
 _SECOND_ATTEMPT_ENDINGS: dict[Stage, JudgeStatus] = {
     "judge_pass": "passed_after_revision",
     "judge_revise": "rejected_after_revision",
+    "judge_skipped": "skipped",
     "judge_unavailable": "unavailable",
 }
 _FLAGGED: frozenset[JudgeStatus] = frozenset({"rejected_after_revision", "executed_previous_plan"})
@@ -171,7 +174,9 @@ def _judge_budget_left(previous: _Attempt | None) -> float:
 
 
 def _judge_stage(review: JudgeReview) -> Stage:
-    """Where a judged attempt stopped: unavailable, revise (code's rule), or pass."""
+    """Where a judged attempt stopped: skipped, unavailable, revise (code's rule), or pass."""
+    if review.skipped:
+        return "judge_skipped"
     if not review.available:
         return "judge_unavailable"
     return "judge_revise" if review.needs_revision else "judge_pass"

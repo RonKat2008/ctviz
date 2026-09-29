@@ -70,6 +70,7 @@ class JudgeReview:
     failed_checks: tuple[str, ...] = ()
     discarded: int = 0
     elapsed_s: float = 0.0
+    skipped: bool = False  # no judge ran at all (replay mode): reported as `judge.status="skipped"`
 
 
 def model_family(model: str) -> str:

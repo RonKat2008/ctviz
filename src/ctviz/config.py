@@ -28,6 +28,16 @@ JUDGE_REQUEST_BUDGET_S = 12.0
 JUDGE_MIN_CALL_S = 2.0
 COHORT_FETCH_CONCURRENCY = 4
 CACHE_TTL_S = 3600
+CACHE_MAX_ENTRIES = 128  # D1: bounded LRU -- evicts the least-recently-used entry past this
+CACHE_MAX_BYTES = 256 * 1024 * 1024  # §10.2: total raw-body bytes held; LRU-evicts past this
+VERSION_CACHE_TTL_S = 600  # /version is fetched once per process per this TTL (§10.2)
+VERSION_NEGATIVE_TTL_S = 60  # a failed /version is not retried per request for this long
+RETRY_AFTER_CAP_S = 5.0  # D2: a 429's Retry-After (seconds form) is honored, capped at this
+# §4.5: fetch worst case is 15-25 s inside a ~30 s request. One request makes HTTP_RETRIES (3)
+# attempts, i.e. at most 2 sleeps, each <= RETRY_AFTER_CAP_S, so retry sleeps total <= 10 s;
+# RETRY_BUDGET_S makes that ceiling explicit: no sleep may exceed what remains of it.
+RETRY_BUDGET_S = 10.0
+RETRY_JITTER_FRACTION = 0.25  # D2: exponential backoff gets up to +25% random jitter
 
 
 class Settings(BaseSettings):

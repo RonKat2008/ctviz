@@ -64,6 +64,10 @@ async def _run(fixture: str, plan: object, viz_type: str, **fields: object) -> o
             httpx.Response(200, json={"totalCount": len(records), "studies": records}),
         ]
     )
+    # D3: run_pipeline now fetches /version once per run for meta.provenance (§12.6).
+    respx.get(f"{CTGOV_BASE_URL}/version").mock(
+        return_value=httpx.Response(200, json={"apiVersion": "2.0.5", "dataTimestamp": "golden"})
+    )
     planner = Planner(FakeBackend(plan))
     # S6: an empty search_terms plan avoids the S3-era default query.intr=pembrolizumab term
     # being strict-matched against fixtures that aren't about pembrolizumab (see the S6 rulings

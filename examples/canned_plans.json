@@ -1,0 +1,280 @@
+{
+  "examples": [
+    {
+      "query": "How has the number of pembrolizumab trials changed over time?",
+      "fixture": "pembrolizumab",
+      "plan": {
+        "answerable": true,
+        "out_of_scope_reason": null,
+        "suggested_reframing": null,
+        "interpretation": "Number of pembrolizumab trials by start year.",
+        "search_terms": [
+          {
+            "param": "query.intr",
+            "value": "Pembrolizumab",
+            "source": "query_text",
+            "rationale": "the drug named in the question"
+          }
+        ],
+        "filters": null,
+        "comparison": null,
+        "analysis": {
+          "kind": "time_trend",
+          "group_by": null,
+          "series_by": null,
+          "phase_mode": null,
+          "time_field": "start_date",
+          "granularity": "year",
+          "measure_x": null,
+          "measure_y": null,
+          "color_by": null,
+          "network_type": null,
+          "top_n": null
+        },
+        "visualization": {
+          "type": "time_series",
+          "title": "Pembrolizumab trials by start year",
+          "rationale": "a trend over time is best read as a line/time series"
+        },
+        "assumptions": [
+          "Replay mode: a canned example plan answered this offline, with no live planner call."
+        ]
+      }
+    },
+    {
+      "query": "How many pembrolizumab trials are there by phase?",
+      "fixture": "pembrolizumab",
+      "plan": {
+        "answerable": true,
+        "out_of_scope_reason": null,
+        "suggested_reframing": null,
+        "interpretation": "Pembrolizumab trials grouped by combined phase.",
+        "search_terms": [
+          {
+            "param": "query.intr",
+            "value": "Pembrolizumab",
+            "source": "query_text",
+            "rationale": "the drug named in the question"
+          }
+        ],
+        "filters": null,
+        "comparison": null,
+        "analysis": {
+          "kind": "count_by",
+          "group_by": "phase",
+          "series_by": null,
+          "phase_mode": "combined",
+          "time_field": null,
+          "granularity": null,
+          "measure_x": null,
+          "measure_y": null,
+          "color_by": null,
+          "network_type": null,
+          "top_n": null
+        },
+        "visualization": {
+          "type": "bar_chart",
+          "title": "Pembrolizumab trials by phase",
+          "rationale": "a categorical distribution is best read as a bar chart"
+        },
+        "assumptions": [
+          "Replay mode: a canned example plan answered this offline, with no live planner call."
+        ]
+      }
+    },
+    {
+      "query": "How many multiple sclerosis trials are recruiting, by country?",
+      "fixture": "ms_recruiting",
+      "plan": {
+        "answerable": true,
+        "out_of_scope_reason": null,
+        "suggested_reframing": null,
+        "interpretation": "Recruiting multiple sclerosis trials, by country.",
+        "search_terms": [
+          {
+            "param": "query.cond",
+            "value": "Multiple Sclerosis",
+            "source": "query_text",
+            "rationale": "the condition named in the question"
+          }
+        ],
+        "filters": {
+          "phases": null,
+          "overall_statuses": ["RECRUITING"],
+          "study_types": null,
+          "intervention_types": null,
+          "lead_sponsor_classes": null,
+          "countries": null,
+          "start_year_min": null,
+          "start_year_max": null,
+          "nct_ids": null
+        },
+        "comparison": null,
+        "analysis": {
+          "kind": "count_by",
+          "group_by": "country",
+          "series_by": null,
+          "phase_mode": null,
+          "time_field": null,
+          "granularity": null,
+          "measure_x": null,
+          "measure_y": null,
+          "color_by": null,
+          "network_type": null,
+          "top_n": 15
+        },
+        "visualization": {
+          "type": "bar_chart",
+          "title": "Recruiting multiple sclerosis trials by country",
+          "rationale": "a categorical distribution is best read as a bar chart"
+        },
+        "assumptions": [
+          "Replay mode: a canned example plan answered this offline, with no live planner call."
+        ]
+      }
+    },
+    {
+      "query": "What is the enrollment distribution for psoriasis phase 2 trials?",
+      "fixture": "psoriasis_p2",
+      "plan": {
+        "answerable": true,
+        "out_of_scope_reason": null,
+        "suggested_reframing": null,
+        "interpretation": "Enrollment distribution for phase 2 psoriasis trials.",
+        "search_terms": [
+          {
+            "param": "query.cond",
+            "value": "Psoriasis",
+            "source": "query_text",
+            "rationale": "the condition named in the question"
+          }
+        ],
+        "filters": {
+          "phases": ["PHASE2"],
+          "overall_statuses": null,
+          "study_types": null,
+          "intervention_types": null,
+          "lead_sponsor_classes": null,
+          "countries": null,
+          "start_year_min": null,
+          "start_year_max": null,
+          "nct_ids": null
+        },
+        "comparison": null,
+        "analysis": {
+          "kind": "histogram",
+          "group_by": null,
+          "series_by": null,
+          "phase_mode": null,
+          "time_field": null,
+          "granularity": null,
+          "measure_x": "enrollment",
+          "measure_y": null,
+          "color_by": null,
+          "network_type": null,
+          "top_n": null
+        },
+        "visualization": {
+          "type": "histogram",
+          "title": "Enrollment distribution, phase 2 psoriasis trials",
+          "rationale": "a numeric distribution is best read as a histogram"
+        },
+        "assumptions": [
+          "Replay mode: a canned example plan answered this offline, with no live planner call."
+        ]
+      }
+    },
+    {
+      "query": "Duration versus enrollment for completed phase 3 Crohn's disease trials",
+      "fixture": "crohns_p3_completed",
+      "plan": {
+        "answerable": true,
+        "out_of_scope_reason": null,
+        "suggested_reframing": null,
+        "interpretation": "Trial duration versus enrollment, completed phase 3 Crohn's disease trials.",
+        "search_terms": [
+          {
+            "param": "query.cond",
+            "value": "Crohn's Disease",
+            "source": "query_text",
+            "rationale": "the condition named in the question"
+          }
+        ],
+        "filters": {
+          "phases": ["PHASE3"],
+          "overall_statuses": ["COMPLETED"],
+          "study_types": null,
+          "intervention_types": null,
+          "lead_sponsor_classes": null,
+          "countries": null,
+          "start_year_min": null,
+          "start_year_max": null,
+          "nct_ids": null
+        },
+        "comparison": null,
+        "analysis": {
+          "kind": "scatter",
+          "group_by": null,
+          "series_by": null,
+          "phase_mode": null,
+          "time_field": null,
+          "granularity": null,
+          "measure_x": "duration_months",
+          "measure_y": "enrollment",
+          "color_by": null,
+          "network_type": null,
+          "top_n": null
+        },
+        "visualization": {
+          "type": "scatter_plot",
+          "title": "Duration vs enrollment, completed phase 3 Crohn's disease trials",
+          "rationale": "two numeric measures per trial are best read as a scatter plot"
+        },
+        "assumptions": [
+          "Replay mode: a canned example plan answered this offline, with no live planner call."
+        ]
+      }
+    },
+    {
+      "query": "Show the sponsor-drug network for glioblastoma trials",
+      "fixture": "glioblastoma",
+      "plan": {
+        "answerable": true,
+        "out_of_scope_reason": null,
+        "suggested_reframing": null,
+        "interpretation": "Sponsor-drug network for glioblastoma trials.",
+        "search_terms": [
+          {
+            "param": "query.cond",
+            "value": "Glioblastoma",
+            "source": "query_text",
+            "rationale": "the condition named in the question"
+          }
+        ],
+        "filters": null,
+        "comparison": null,
+        "analysis": {
+          "kind": "network",
+          "group_by": null,
+          "series_by": null,
+          "phase_mode": null,
+          "time_field": null,
+          "granularity": null,
+          "measure_x": null,
+          "measure_y": null,
+          "color_by": null,
+          "network_type": "sponsor_drug",
+          "top_n": null
+        },
+        "visualization": {
+          "type": "network_graph",
+          "title": "Sponsor-drug network, glioblastoma trials",
+          "rationale": "shared trials between sponsors and drugs is best read as a network"
+        },
+        "assumptions": [
+          "Replay mode: a canned example plan answered this offline, with no live planner call."
+        ]
+      }
+    }
+  ]
+}

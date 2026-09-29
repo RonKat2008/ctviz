@@ -29,9 +29,10 @@ class OutOfScopeError(CtvizError):
 class PlanInvalidError(CtvizError):
     """The plan still failed deterministic checks after the revise attempt."""
 
-    def __init__(self, errors: list[str]) -> None:
+    def __init__(self, errors: list[str], details: dict[str, object] | None = None) -> None:
         super().__init__("; ".join(errors))
         self.errors = errors
+        self.details = details
 
 
 class CitationCheckError(CtvizError):

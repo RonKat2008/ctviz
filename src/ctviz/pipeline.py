@@ -259,6 +259,6 @@ async def run_pipeline(
     }
     plan, results, adjustments = apply_viz_guards(plan, results)
     visualization = build_visualization(plan, results, _resolve_title(plan, cohorts))
-    meta = _meta(plan, outcome, cohorts, results, request, planner, adjustments)
+    meta = await _meta(plan, outcome, cohorts, results, request, planner, adjustments, client)
     response = VisualizeResponse(ok=True, visualization=visualization, meta=meta, error=None)
     return _verify_and_attach(response, cohorts, results)

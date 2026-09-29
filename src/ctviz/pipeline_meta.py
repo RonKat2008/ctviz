@@ -5,15 +5,20 @@ because every meta helper below is built from a `list[_CohortFetch]`; `pipeline.
 back for `_fetch_one`/`_fetch_cohorts`. `_meta` is the single entry point `run_pipeline` calls.
 """
 
+import logging
+import os
+import subprocess
 from dataclasses import asdict, dataclass, field
-from datetime import UTC, datetime
+from functools import lru_cache
+from pathlib import Path
 
 from ctviz.agent.orchestrator import PlanningOutcome
 from ctviz.agent.overlay import FieldOverride
 from ctviz.agent.planner import Planner
 from ctviz.analysis.aggregate import MatchedTrial
 from ctviz.analysis.entities import sponsor_ambiguity_warning, sponsor_census
-from ctviz.ctgov.client import FetchResult
+from ctviz.ctgov.client import CtGovClient, FetchResult
+from ctviz.errors import UpstreamError
 from ctviz.pipeline_analysis import AnalysisResult, excluded_of, plotted_ids
 from ctviz.pipeline_analysis import network_summary as network_summary_of
 from ctviz.schemas.citations import Predicate
@@ -31,9 +36,45 @@ from ctviz.schemas.response import (
     Validation,
 )
 
+log = logging.getLogger(__name__)
+
 SOURCE = "clinicaltrials.gov"
-CODE_VERSION = "dev"  # placeholder until CI stamps a real git sha (out of S4 scope)
+UNKNOWN = "unknown"  # D3: shared fallback for a git sha, api_version or data_timestamp we
+# genuinely could not learn -- never a crash, always disclosed as exactly this string.
 CITATION_URL_TEMPLATE = "https://clinicaltrials.gov/study/{nct_id}"
+_GIT_SHA_TIMEOUT_S = 2.0
+CODE_VERSION_ENV = "CTVIZ_CODE_VERSION"  # stamped into the zip deliverable (no .git there)
+
+
+def _git_short_sha() -> str:
+    """The checkout's short git SHA, or UNKNOWN when this isn't a git checkout (D3).
+
+    Never raises: any failure (git missing, not a repo, timeout) degrades to UNKNOWN so a
+    provenance lookup can never crash a request.
+    """
+    repo_dir = Path(__file__).resolve().parent
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=_GIT_SHA_TIMEOUT_S,
+            cwd=repo_dir,
+            check=True,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        log.warning("Could not resolve git SHA for code_version: %s", type(exc).__name__)
+        return UNKNOWN
+    sha = result.stdout.strip()
+    return sha or UNKNOWN
+
+
+@lru_cache(maxsize=1)
+def resolve_code_version() -> str:
+    """The process-wide `code_version` (D3), resolved once: `CTVIZ_CODE_VERSION` if set (the zip
+    deliverable has no .git), else the git short SHA, else UNKNOWN. The app lifespan calls this
+    at startup so no request ever pays for the git subprocess."""
+    return os.environ.get(CODE_VERSION_ENV, "").strip() or _git_short_sha()
 
 
 @dataclass(frozen=True)
@@ -161,15 +202,45 @@ def _validation_block(outcome: PlanningOutcome) -> Validation:
     )
 
 
-def _provenance(cohorts: list[_CohortFetch], planner: Planner) -> Provenance:
+async def _api_version_and_data_timestamp(client: CtGovClient) -> tuple[str, str]:
+    """`client.version()` (cached by the client itself, §10.2) for `api_version`/`data_timestamp`
+    (D3); any failure degrades to UNKNOWN + a logged warning, never a 500 (§12.6).
+
+    Deliberately broad, mirroring the judge's single boundary (agent/judge.py `_complete`):
+    `api_version`/`data_timestamp` are a best-effort provenance disclosure, not load-bearing for
+    the response itself, so ANY failure here -- a known `UpstreamError`, or an unexpected bug in
+    this best-effort path -- must never turn into a 500 for the caller's real question.
+    """
+    try:
+        body = await client.version()
+    except UpstreamError as exc:
+        log.warning(
+            "Could not fetch ClinicalTrials.gov /version for provenance: %s", type(exc).__name__
+        )
+        return UNKNOWN, UNKNOWN
+    except Exception:
+        log.exception("Unexpected error fetching ClinicalTrials.gov /version for provenance")
+        return UNKNOWN, UNKNOWN
+    api_version = body.get("apiVersion")
+    data_timestamp = body.get("dataTimestamp")
+    return (
+        str(api_version) if api_version else UNKNOWN,
+        str(data_timestamp) if data_timestamp else UNKNOWN,
+    )
+
+
+async def _provenance(
+    cohorts: list[_CohortFetch], planner: Planner, client: CtGovClient
+) -> Provenance:
     """Exactly what was fetched, and with which model/code version, for reproducibility (§12.6)."""
     api_requests = [asdict(log_entry) for c in cohorts for log_entry in c.fetch.requests]
+    api_version, data_timestamp = await _api_version_and_data_timestamp(client)
     return Provenance(
-        api_version="unknown",
-        data_timestamp=datetime.now(UTC).isoformat(),
+        api_version=api_version,
+        data_timestamp=data_timestamp,
         api_requests=api_requests,
         planner_model=planner.model_name,
-        code_version=CODE_VERSION,
+        code_version=resolve_code_version(),
     )
 
 
@@ -231,7 +302,7 @@ def _warnings(plan: QueryPlan, cohorts: list[_CohortFetch], outcome: PlanningOut
     ]
 
 
-def _meta(
+async def _meta(
     plan: QueryPlan,
     outcome: PlanningOutcome,
     cohorts: list[_CohortFetch],
@@ -239,12 +310,13 @@ def _meta(
     request: VisualizeRequest,
     planner: Planner,
     adjustments: list[str],
+    client: CtGovClient,
 ) -> Meta:
     """Assemble the response's `meta`; every block populated so far uses a typed shape."""
     cohort_summaries = [_cohort_summary(c, plan, results[c.label]) for c in cohorts]
     single = cohorts[0] if len(cohorts) == 1 else None
     data_coverage = _data_coverage(single, results[single.label]) if single else None
-    provenance = _provenance(cohorts, planner)
+    provenance = await _provenance(cohorts, planner, client)
     return Meta(
         source=SOURCE,
         query_interpretation=plan.interpretation,

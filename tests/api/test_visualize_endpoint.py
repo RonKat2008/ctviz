@@ -270,7 +270,12 @@ def test_health_endpoint_reports_configured_providers_without_leaking_keys() -> 
 
     body = response.json()
     assert response.status_code == 200
-    assert body == {"status": "ok", "openai_configured": False, "openrouter_configured": False}
+    assert body == {
+        "ok": True,
+        "ctgov": None,
+        "providers": {"openai": False, "openrouter": False},
+        "mode": "live",
+    }
 
 
 def test_to_response_falls_back_to_internal_error_for_an_unmapped_ctviz_error() -> None:

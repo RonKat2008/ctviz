@@ -37,6 +37,8 @@ def _details(exc: Exception) -> dict[str, object] | None:
     """§11.6 step 6: a failed citation check ships its violations in `error.details`."""
     if isinstance(exc, CitationCheckError):
         return {"violations": list(exc.violations)}
+    if isinstance(exc, PlanInvalidError):
+        return exc.details
     return None
 
 
