@@ -1180,6 +1180,8 @@ The prompt iteration history (what failed, what changed, the new score) is in `D
 
 ## 9. Limitations and future work
 
+_How this list was made: items 1–12 were drafted with Claude from the design and from what we measured, and I reviewed them; items 13–17 come from the evals and live runs. The two improvements I raised myself are the first two below: speed, and benchmarking on real datasets._
+
 1. **Client-side aggregation over at most 20,000 records per cohort.** Broader questions analyze the
    most recent 20,000 trials by start date, disclosed in `meta`; rankings and networks describe that
    population only.
