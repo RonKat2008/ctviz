@@ -251,5 +251,17 @@ def build_network(title: str, graph: Graph, network_type: NetworkType) -> Networ
         "edges": Channel(field="edges", type="nominal"),
     }
     return NetworkGraph(
-        type="network_graph", title=title, encoding=encoding, data=data, options=graph.summary
+        type="network_graph",
+        title=title,
+        encoding=encoding,
+        data=data,
+        options=_network_options(graph),
     )
+
+
+def _network_options(graph: Graph) -> dict[str, object]:
+    """Pruning counts for the chart; the per-trial exclusion map lives only in data_coverage."""
+    excluded = graph.summary.get("excluded", {})
+    options = {k: v for k, v in graph.summary.items() if k != "excluded"}
+    options["excluded_count"] = len(excluded) if isinstance(excluded, dict) else 0
+    return options

@@ -233,3 +233,16 @@ def test_build_network_produces_directed_sponsor_drug_graph_with_referentially_s
     assert viz.data.directed is True
     assert {n.id for n in viz.data.nodes} == {"sponsor:merck", "drug:x"}
     assert viz.data.edges[0].weight == 1
+
+
+def test_build_network_options_carry_counts_not_the_per_trial_exclusion_map() -> None:
+    node = GraphNode("drug:x", "X", "drug", {}, (_graph_citation("NCT00000001"),))
+    excluded = {f"NCT{i:08d}": "no_edge_pair" for i in range(2, 5)}
+    summary = {"nodes_before_pruning": 1, "edges_before_pruning": 0, "excluded": excluded}
+    graph = Graph((node,), (), summary)
+
+    viz = build_network("Drugs", graph, NetworkType.DRUG_DRUG)
+
+    assert "excluded" not in viz.options
+    assert viz.options["excluded_count"] == 3
+    assert "NCT00000002" not in str(viz.options)

@@ -304,6 +304,809 @@ offline with `uv run python -m ctviz.citations.verify examples/0N.response.json`
 responses (first rows, 2 citations per datum, `"_elided": N`) are in
 [`examples/README_snippets.md`](examples/README_snippets.md); regenerate everything with
 `make examples` (live, needs keys).
+
+**Actual JSON outputs** (abridged to 2 rows and 1 citation each; the full responses are in `examples/`):
+
+<details>
+<summary><b>Example 1</b> — <code>time_series</code>: How has the number of trials for this drug changed over time?</summary>
+
+Request (`examples/01.request.json`):
+
+```json
+{
+  "query": "How has the number of trials for this drug changed over time?",
+  "drug_name": "Pembrolizumab"
+}
+```
+
+Actual output, abridged (full: `examples/01.response.json`):
+
+```json
+{
+  "schema_version": "1.0.0",
+  "ok": true,
+  "error": null,
+  "visualization": {
+    "title": "Pembrolizumab trials by start year",
+    "encoding": {
+      "x": {
+        "field": "year",
+        "type": "temporal",
+        "title": "Start year",
+        "unit": null,
+        "format": null,
+        "time_unit": "year",
+        "sort": null,
+        "bin": null
+      },
+      "y": {
+        "field": "trial_count",
+        "type": "quantitative",
+        "title": "Trials started",
+        "unit": "trials",
+        "format": null,
+        "time_unit": null,
+        "sort": null,
+        "bin": null
+      }
+    },
+    "options": {
+      "mark": "line"
+    },
+    "type": "time_series",
+    "data": [
+      {
+        "year": "2008",
+        "cohort": "Pembrolizumab",
+        "trial_count": 1,
+        "flags": [],
+        "predicate": {
+          "op": "year_equals",
+          "path": "/protocolSection/statusModule/startDateStruct/date",
+          "value": 2008
+        },
+        "citations": [
+          {
+            "nct_id": "NCT04898751",
+            "field": "/protocolSection/statusModule/startDateStruct/date",
+            "excerpt": "2008-01-01",
+            "evidence": [
+              {
+                "role": "match",
+                "field": "/protocolSection/armsInterventionsModule/interventions/0/otherNames/2",
+                "excerpt": "Pembrolizumab (Keytruda, L01XC18)",
+                "span": null
+              }
+            ]
+          }
+        ],
+        "other_categories": 0
+      },
+      {
+        "year": "2009",
+        "cohort": "Pembrolizumab",
+        "trial_count": 0,
+        "flags": [],
+        "predicate": {
+          "op": "year_equals",
+          "path": "/protocolSection/statusModule/startDateStruct/date",
+          "value": 2009
+        },
+        "citations": [],
+        "other_categories": 0
+      },
+      {
+        "_elided_rows": 18
+      }
+    ]
+  },
+  "meta": {
+    "query_interpretation": "Track how trial volume for the specified drug changes over time.",
+    "cohorts": [
+      {
+        "label": "Pembrolizumab",
+        "api_total_count": 2961,
+        "records_matched": 2636,
+        "records_plotted": 2632
+      }
+    ],
+    "citation_check": {
+      "mode": "full",
+      "passed": true,
+      "citations_checked": 2632,
+      "evidence_checked": 5264,
+      "predicates_checked": 2632,
+      "recount_ok": true,
+      "ms": 33
+    },
+    "validation": {
+      "executed_attempt": 1,
+      "judge": {
+        "status": "passed"
+      }
+    },
+    "_elided": "filters, assumptions, data_coverage, provenance, trace, ... (see the full file)"
+  }
+}
+```
+</details>
+
+<details>
+<summary><b>Example 2</b> — <code>histogram</code>: Distribution of enrollment sizes for Phase 2 psoriasis trials</summary>
+
+Request (`examples/02.request.json`):
+
+```json
+{
+  "query": "Distribution of enrollment sizes for Phase 2 psoriasis trials"
+}
+```
+
+Actual output, abridged (full: `examples/02.response.json`):
+
+```json
+{
+  "schema_version": "1.0.0",
+  "ok": true,
+  "error": null,
+  "visualization": {
+    "title": "Enrollment size distribution for Phase 2 psoriasis trials",
+    "encoding": {
+      "x": {
+        "field": "bin_start",
+        "type": "quantitative",
+        "title": "enrollment",
+        "unit": null,
+        "format": null,
+        "time_unit": null,
+        "sort": null,
+        "bin": true
+      },
+      "x2": {
+        "field": "bin_end",
+        "type": "quantitative",
+        "title": null,
+        "unit": null,
+        "format": null,
+        "time_unit": null,
+        "sort": null,
+        "bin": null
+      },
+      "y": {
+        "field": "trial_count",
+        "type": "quantitative",
+        "title": "Trials",
+        "unit": "trials",
+        "format": null,
+        "time_unit": null,
+        "sort": null,
+        "bin": null
+      },
+      "label": {
+        "field": "bin_label",
+        "type": "nominal",
+        "title": null,
+        "unit": null,
+        "format": null,
+        "time_unit": null,
+        "sort": null,
+        "bin": null
+      }
+    },
+    "options": {},
+    "type": "histogram",
+    "data": [
+      {
+        "bin_label": "0–9",
+        "trial_count": 24,
+        "flags": [
+          "actual:22",
+          "estimated:1",
+          "untyped:1"
+        ],
+        "predicate": {
+          "op": "in_range",
+          "path": "/protocolSection/designModule/enrollmentInfo/count",
+          "value": [
+            0,
+            10
+          ]
+        },
+        "citations": [
+          {
+            "nct_id": "NCT03619902",
+            "field": "/protocolSection/designModule/enrollmentInfo/count",
+            "excerpt": "8",
+            "evidence": [
+              {
+                "role": "context",
+                "field": "/protocolSection/designModule/enrollmentInfo/type",
+                "excerpt": "ACTUAL",
+                "span": null
+              }
+            ]
+          },
+          {
+            "_elided": 23
+          }
+        ],
+        "other_categories": 0,
+        "bin_start": 0,
+        "bin_end": 10
+      },
+      {
+        "bin_label": "10–24",
+        "trial_count": 73,
+        "flags": [
+          "actual:56",
+          "estimated:12",
+          "untyped:5"
+        ],
+        "predicate": {
+          "op": "in_range",
+          "path": "/protocolSection/designModule/enrollmentInfo/count",
+          "value": [
+            10,
+            25
+          ]
+        },
+        "citations": [
+          {
+            "nct_id": "NCT03431974",
+            "field": "/protocolSection/designModule/enrollmentInfo/count",
+            "excerpt": "19",
+            "evidence": [
+              {
+                "role": "context",
+                "field": "/protocolSection/designModule/enrollmentInfo/type",
+                "excerpt": "ACTUAL",
+                "span": null
+              }
+            ]
+          },
+          {
+            "_elided": 72
+          }
+        ],
+        "other_categories": 0,
+        "bin_start": 10,
+        "bin_end": 25
+      },
+      {
+        "_elided_rows": 8
+      }
+    ]
+  },
+  "meta": {
+    "query_interpretation": "Distribution of participant enrollment sizes in Phase 2 psoriasis trials.",
+    "cohorts": [
+      {
+        "label": "psoriasis",
+        "api_total_count": 512,
+        "records_matched": 512,
+        "records_plotted": 496
+      }
+    ],
+    "citation_check": {
+      "mode": "full",
+      "passed": true,
+      "citations_checked": 496,
+      "evidence_checked": 971,
+      "predicates_checked": 496,
+      "recount_ok": true,
+      "ms": 9
+    },
+    "validation": {
+      "executed_attempt": 1,
+      "judge": {
+        "status": "passed"
+      }
+    },
+    "_elided": "filters, assumptions, data_coverage, provenance, trace, ... (see the full file)"
+  }
+}
+```
+</details>
+
+<details>
+<summary><b>Example 3</b> — <code>grouped_bar_chart</code>: Compare phases for trials involving pembrolizumab vs nivolumab</summary>
+
+Request (`examples/03.request.json`):
+
+```json
+{
+  "query": "Compare phases for trials involving pembrolizumab vs nivolumab"
+}
+```
+
+Actual output, abridged (full: `examples/03.response.json`):
+
+```json
+{
+  "schema_version": "1.0.0",
+  "ok": true,
+  "error": null,
+  "visualization": {
+    "title": "pembrolizumab vs nivolumab trials by phase",
+    "encoding": {
+      "x": {
+        "field": "category",
+        "type": "nominal",
+        "title": "phase",
+        "unit": null,
+        "format": null,
+        "time_unit": null,
+        "sort": null,
+        "bin": null
+      },
+      "y": {
+        "field": "trial_count",
+        "type": "quantitative",
+        "title": "Trials",
+        "unit": "trials",
+        "format": null,
+        "time_unit": null,
+        "sort": null,
+        "bin": null
+      },
+      "color": {
+        "field": "cohort",
+        "type": "nominal",
+        "title": "Cohort",
+        "unit": null,
+        "format": null,
+        "time_unit": null,
+        "sort": null,
+        "bin": null
+      }
+    },
+    "options": {
+      "stacked": false,
+      "normalize": "count"
+    },
+    "type": "grouped_bar_chart",
+    "data": [
+      {
+        "category": "Early Phase 1",
+        "cohort": "pembrolizumab",
+        "trial_count": 40,
+        "flags": [],
+        "predicate": {
+          "op": "set_equals",
+          "path": "/protocolSection/designModule/phases",
+          "value": [
+            "EARLY_PHASE1"
+          ]
+        },
+        "citations": [
+          {
+            "nct_id": "NCT03291353",
+            "field": "/protocolSection/designModule/phases/0",
+            "excerpt": "EARLY_PHASE1",
+            "evidence": [
+              {
+                "role": "match",
+                "field": "/protocolSection/armsInterventionsModule/interventions/0/name",
+                "excerpt": "pembrolizumab",
+                "span": null
+              }
+            ]
+          },
+          {
+            "_elided": 39
+          }
+        ],
+        "other_categories": 0,
+        "share": 0.0152
+      },
+      {
+        "category": "Phase 1",
+        "cohort": "pembrolizumab",
+        "trial_count": 538,
+        "flags": [],
+        "predicate": {
+          "op": "set_equals",
+          "path": "/protocolSection/designModule/phases",
+          "value": [
+            "PHASE1"
+          ]
+        },
+        "citations": [
+          {
+            "nct_id": "NCT03666273",
+            "field": "/protocolSection/designModule/phases/0",
+            "excerpt": "PHASE1",
+            "evidence": [
+              {
+                "role": "match",
+                "field": "/protocolSection/armsInterventionsModule/interventions/1/name",
+                "excerpt": "Bapotulimab (BAY1905254) + Pembrolizumab (KEYTRUDA®)",
+                "span": null
+              }
+            ]
+          },
+          {
+            "_elided": 537
+          }
+        ],
+        "other_categories": 0,
+        "share": 0.2041
+      },
+      {
+        "_elided_rows": 16
+      }
+    ]
+  },
+  "meta": {
+    "query_interpretation": "Compare the phase distribution of trials involving pembrolizumab versus nivolumab.",
+    "cohorts": [
+      {
+        "label": "pembrolizumab",
+        "api_total_count": 2961,
+        "records_matched": 2636,
+        "records_plotted": 2636
+      },
+      {
+        "label": "nivolumab",
+        "api_total_count": 2025,
+        "records_matched": 1758,
+        "records_plotted": 1758
+      }
+    ],
+    "citation_check": {
+      "mode": "full",
+      "passed": true,
+      "citations_checked": 4394,
+      "evidence_checked": 9595,
+      "predicates_checked": 4394,
+      "recount_ok": true,
+      "ms": 95
+    },
+    "validation": {
+      "executed_attempt": 1,
+      "judge": {
+        "status": "passed"
+      }
+    },
+    "_elided": "filters, assumptions, data_coverage, provenance, trace, ... (see the full file)"
+  }
+}
+```
+</details>
+
+<details>
+<summary><b>Example 4</b> — <code>network_graph</code>: Show a network of sponsors and drugs for glioblastoma trials</summary>
+
+Request (`examples/04.request.json`):
+
+```json
+{
+  "query": "Show a network of sponsors and drugs for glioblastoma trials"
+}
+```
+
+Actual output, abridged (full: `examples/04.response.json`):
+
+```json
+{
+  "schema_version": "1.0.0",
+  "ok": true,
+  "error": null,
+  "visualization": {
+    "title": "Sponsor-Drug Network for Glioblastoma Trials",
+    "encoding": {
+      "nodes": {
+        "field": "nodes",
+        "type": "nominal",
+        "title": null,
+        "unit": null,
+        "format": null,
+        "time_unit": null,
+        "sort": null,
+        "bin": null
+      },
+      "edges": {
+        "field": "edges",
+        "type": "nominal",
+        "title": null,
+        "unit": null,
+        "format": null,
+        "time_unit": null,
+        "sort": null,
+        "bin": null
+      }
+    },
+    "options": {
+      "nodes_before_pruning": 2060,
+      "edges_before_pruning": 2355,
+      "nodes_after_pruning": 46,
+      "edges_after_pruning": 68,
+      "min_edge_weight": 2,
+      "excluded_count": 1357
+    },
+    "type": "network_graph",
+    "data": {
+      "directed": true,
+      "nodes": [
+        {
+          "id": "sponsor:national cancer institute (nci)",
+          "label": "National Cancer Institute (NCI)",
+          "type": "sponsor",
+          "weight": 128,
+          "predicate": {
+            "op": "equals",
+            "path": "/protocolSection/sponsorCollaboratorsModule/leadSponsor/name",
+            "value": "National Cancer Institute (NCI)"
+          },
+          "citations": [
+            {
+              "nct_id": "NCT02311920",
+              "field": "/protocolSection/sponsorCollaboratorsModule/leadSponsor/name",
+              "excerpt": "National Cancer Institute (NCI)",
+              "evidence": []
+            },
+            {
+              "_elided": 127
+            }
+          ]
+        },
+        {
+          "_elided_nodes": 45
+        }
+      ],
+      "edges": [
+        {
+          "id": "sponsor:national cancer institute (nci)::drug:ipilimumab",
+          "source": "sponsor:national cancer institute (nci)",
+          "target": "drug:ipilimumab",
+          "type": "sponsor_drug",
+          "weight": 4,
+          "predicate": {
+            "all": [
+              {
+                "op": "equals",
+                "path": "/protocolSection/sponsorCollaboratorsModule/leadSponsor/name",
+                "value": "National Cancer Institute (NCI)"
+              },
+              {
+                "op": "any_element",
+                "path": "/protocolSection/armsInterventionsModule/interventions",
+                "where": [
+                  {
+                    "op": "in",
+                    "path": "/type",
+                    "value": [
+                      "DRUG",
+                      "BIOLOGICAL"
+                    ]
+                  },
+                  {
+                    "op": "normalizes_to",
+                    "path": "/name",
+                    "value": "ipilimumab"
+                  }
+                ]
+              }
+            ]
+          },
+          "citations": [
+            {
+              "nct_id": "NCT02311920",
+              "field": "/protocolSection/sponsorCollaboratorsModule/leadSponsor/name",
+              "excerpt": "National Cancer Institute (NCI)",
+              "evidence": [
+                {
+                  "role": "bucket",
+                  "field": "/protocolSection/armsInterventionsModule/interventions/0/name",
+                  "excerpt": "Ipilimumab",
+                  "span": null
+                }
+              ]
+            },
+            {
+              "_elided": 3
+            }
+          ],
+          "flags": []
+        },
+        {
+          "_elided_edges": 67
+        }
+      ]
+    }
+  },
+  "meta": {
+    "query_interpretation": "Show the sponsor–drug network for trials studying glioblastoma.",
+    "cohorts": [
+      {
+        "label": "glioblastoma",
+        "api_total_count": 2268,
+        "records_matched": 2268,
+        "records_plotted": 911
+      }
+    ],
+    "citation_check": {
+      "mode": "full",
+      "passed": true,
+      "citations_checked": 1658,
+      "evidence_checked": 1968,
+      "predicates_checked": 1658,
+      "recount_ok": true,
+      "ms": 29
+    },
+    "validation": {
+      "executed_attempt": 1,
+      "judge": {
+        "status": "passed"
+      }
+    },
+    "_elided": "filters, assumptions, data_coverage, provenance, trace, ... (see the full file)"
+  }
+}
+```
+</details>
+
+<details>
+<summary><b>Example 5</b> — <code>bar_chart</code>: Which countries have the most recruiting trials for multiple sclerosis?</summary>
+
+Request (`examples/05.request.json`):
+
+```json
+{
+  "query": "Which countries have the most recruiting trials for multiple sclerosis?"
+}
+```
+
+Actual output, abridged (full: `examples/05.response.json`):
+
+```json
+{
+  "schema_version": "1.0.0",
+  "ok": true,
+  "error": null,
+  "visualization": {
+    "title": "multiple sclerosis trials by country",
+    "encoding": {
+      "x": {
+        "field": "category",
+        "type": "nominal",
+        "title": "country",
+        "unit": null,
+        "format": null,
+        "time_unit": null,
+        "sort": null,
+        "bin": null
+      },
+      "y": {
+        "field": "trial_count",
+        "type": "quantitative",
+        "title": "Trials",
+        "unit": "trials",
+        "format": null,
+        "time_unit": null,
+        "sort": null,
+        "bin": null
+      }
+    },
+    "options": {},
+    "type": "bar_chart",
+    "data": [
+      {
+        "category": "United States",
+        "trial_count": 157,
+        "flags": [],
+        "predicate": {
+          "op": "any_element",
+          "path": "/protocolSection/contactsLocationsModule/locations",
+          "where": [
+            {
+              "op": "equals",
+              "path": "/country",
+              "value": "United States"
+            },
+            {
+              "op": "equals",
+              "path": "/status",
+              "value": "RECRUITING"
+            }
+          ]
+        },
+        "citations": [
+          {
+            "nct_id": "NCT07758270",
+            "field": "/protocolSection/contactsLocationsModule/locations/0/country",
+            "excerpt": "United States",
+            "evidence": [
+              {
+                "role": "bucket",
+                "field": "/protocolSection/contactsLocationsModule/locations/0/status",
+                "excerpt": "RECRUITING",
+                "span": null
+              }
+            ]
+          },
+          {
+            "_elided": 156
+          }
+        ],
+        "other_categories": 0
+      },
+      {
+        "category": "France",
+        "trial_count": 50,
+        "flags": [],
+        "predicate": {
+          "op": "any_element",
+          "path": "/protocolSection/contactsLocationsModule/locations",
+          "where": [
+            {
+              "op": "equals",
+              "path": "/country",
+              "value": "France"
+            },
+            {
+              "op": "equals",
+              "path": "/status",
+              "value": "RECRUITING"
+            }
+          ]
+        },
+        "citations": [
+          {
+            "nct_id": "NCT07313462",
+            "field": "/protocolSection/contactsLocationsModule/locations/0/country",
+            "excerpt": "France",
+            "evidence": [
+              {
+                "role": "bucket",
+                "field": "/protocolSection/contactsLocationsModule/locations/0/status",
+                "excerpt": "RECRUITING",
+                "span": null
+              }
+            ]
+          },
+          {
+            "_elided": 49
+          }
+        ],
+        "other_categories": 0
+      },
+      {
+        "_elided_rows": 54
+      }
+    ]
+  },
+  "meta": {
+    "query_interpretation": "Find recruiting trials for multiple sclerosis and compare them by country to see which countries have the most.",
+    "cohorts": [
+      {
+        "label": "multiple sclerosis",
+        "api_total_count": 431,
+        "records_matched": 431,
+        "records_plotted": 431
+      }
+    ],
+    "citation_check": {
+      "mode": "full",
+      "passed": true,
+      "citations_checked": 600,
+      "evidence_checked": 1200,
+      "predicates_checked": 600,
+      "recount_ok": true,
+      "ms": 9
+    },
+    "validation": {
+      "executed_attempt": 1,
+      "judge": {
+        "status": "passed"
+      }
+    },
+    "_elided": "filters, assumptions, data_coverage, provenance, trace, ... (see the full file)"
+  }
+}
+```
+</details>
+
 <!-- EXAMPLES:END -->
 
 ### Web UI
@@ -400,9 +1203,37 @@ The prompt iteration history (what failed, what changed, the new score) is in `D
 11. **Citations pin a snapshot** (`data_timestamp`); records edited later may differ from the excerpt.
 12. **Replay mode answers only the canned questions**, and reads fixtures from the repo checkout.
 
-Future work: a bounded tool-calling fallback for off-menu questions; exact per-bucket counts above
-the cap via `countTotal` probes; MeSH-based entity canonicalization; a persistent cache; a live
-re-verification mode against ClinicalTrials.gov; results-section analytics.
+13. **The judge is the weakest link, measured.** On the labeled set it catches 75% of bad plans
+    (target 90%) with a 25% false-alarm rate (target 15%), mostly on ambiguous place names such as
+    "Washington" or "Georgia". It is advisory: code checks, the probe and the verifier still decide
+    correctness (`evals/report.md`).
+14. **The evaluation is small and self-labeled.** 16 planner and 12 judge cases written by us, not a
+    benchmark drawn from real users or labeled by clinical experts.
+15. **Latency is dominated by LLM calls.** Typical answers take 5–10 s (p50 7.5 s); a deliberately
+    broad 20,000-record question reached 32.8 s (target 30 s).
+16. **Not production-deployed.** No authentication or rate limiting on our API, an in-memory cache
+    per process, and ClinicalTrials.gov itself can rate-limit very large fetches (we saw one 429 in
+    the evals; it surfaces as a clean 502).
+17. **The web UI was checked in Chrome only** (desktop and mobile widths, light and dark); there is
+    no demo video.
+
+### What I would improve with more time
+
+1. **Speed.** Use smaller/faster models for planning and judging (or skip the judge when the plan is
+   an exact match to a known pattern), cache plans for repeated questions, run the judge in
+   parallel with the data fetch, and stream partial results to the UI.
+2. **Real benchmarking.** Build a larger evaluation set from real user questions over real datasets,
+   labeled independently (ideally by people with clinical-trials expertise), and track accuracy,
+   latency and cost per release.
+3. **A stronger judge.** A better model or a small ensemble for ambiguity cases, and an explicit
+   "ask the user to clarify" path instead of guessing.
+4. **Entity resolution.** MeSH-based canonicalization for drugs and conditions (e.g. merging "TMZ"
+   with temozolomide), and learned sponsor-name clustering.
+5. **Beyond the cap.** Exact per-bucket counts above 20,000 records via `countTotal` probes.
+6. **Production hardening.** Deployed endpoint, auth, rate limits, a persistent cache, and a live
+   re-verification mode that re-checks citations against today's ClinicalTrials.gov records.
+7. **Broader questions.** A bounded tool-calling fallback for off-menu questions, and results-section
+   analytics (still citing every number).
 
 ## 10. AI tools and integrity
 
