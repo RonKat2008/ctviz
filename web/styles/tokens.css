@@ -1,0 +1,126 @@
+/* Design tokens: "registry dossier" — warm archival paper, registry teal ink, vermilion
+   citation marks. Series colours validated with the dataviz validator (3 slots all-pairs,
+   8 slots adjacent) against --surface in both modes. */
+:root {
+  color-scheme: light;
+  --paper: #f4f1e8;
+  --surface: #fcfbf7;
+  --surface-2: #efebe0;
+  --ink: #1a1915;
+  --ink-2: #4f4b42;
+  --muted: #7a7468;
+  --rule: #d8d2c3;
+  --rule-strong: #b9b1a0;
+  --grid: #e6e1d4;
+  --edge: #a39b89;
+  --accent: #0f5c63;
+  --accent-ink: #fcfbf7;
+  --accent-wash: rgba(15, 92, 99, 0.08);
+  --cite: #b4441a;
+  --cite-wash: rgba(180, 68, 26, 0.08);
+  --good: #0a6b2c;
+  --good-wash: rgba(12, 163, 12, 0.10);
+  --warn: #8a5a00;
+  --warn-wash: rgba(250, 178, 25, 0.16);
+  --crit: #b3261e;
+  --crit-wash: rgba(208, 59, 59, 0.10);
+  --series-1: #2266b0;
+  --series-2: #cf5f2a;
+  --series-3: #16986c;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+  --series-6: #008300;
+  --series-7: #4a3aa7;
+  --series-8: #e34948;
+  --series-neutral: #b9b1a0;
+  --shadow: 0 1px 0 rgba(26, 25, 21, 0.04), 0 12px 32px -18px rgba(26, 25, 21, 0.28);
+
+  --font-serif: "Newsreader", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: clamp(1rem, 0.96rem + 0.2vw, 1.0625rem);
+  --text-lg: clamp(1.2rem, 1.1rem + 0.5vw, 1.45rem);
+  --text-xl: clamp(1.5rem, 1.2rem + 1.2vw, 2.1rem);
+  --text-hero: clamp(1.8rem, 1.2rem + 2.2vw, 2.9rem);
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2.25rem;
+  --space-section: clamp(3rem, 2rem + 4vw, 6rem);
+  --radius-s: 3px;
+  --radius-m: 6px;
+  --gutter: clamp(16px, 3vw, 40px);
+  --max: 1360px;
+  --duration-fast: 140ms;
+  --duration-normal: 260ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper: #111311;
+    --surface: #1b1d1b;
+    --surface-2: #232622;
+    --ink: #eeebe3;
+    --ink-2: #c2bdb0;
+    --muted: #938d80;
+    --rule: #30332f;
+    --rule-strong: #474b45;
+    --grid: #2a2d29;
+    --edge: #5b5f58;
+    --accent: #6cc2b8;
+    --accent-ink: #0d1413;
+    --accent-wash: rgba(108, 194, 184, 0.10);
+    --cite: #f08a5d;
+    --cite-wash: rgba(240, 138, 93, 0.10);
+    --good: #4cc36f;
+    --warn: #e8b33c;
+    --crit: #f07167;
+    --series-1: #3f8fd6;
+    --series-2: #e0703a;
+    --series-3: #27a97c;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #008300;
+    --series-7: #9085e9;
+    --series-8: #e66767;
+    --series-neutral: #5f635c;
+    --shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 16px 40px -20px rgba(0, 0, 0, 0.7);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #111311;
+  --surface: #1b1d1b;
+  --surface-2: #232622;
+  --ink: #eeebe3;
+  --ink-2: #c2bdb0;
+  --muted: #938d80;
+  --rule: #30332f;
+  --rule-strong: #474b45;
+  --grid: #2a2d29;
+  --edge: #5b5f58;
+  --accent: #6cc2b8;
+  --accent-ink: #0d1413;
+  --accent-wash: rgba(108, 194, 184, 0.10);
+  --cite: #f08a5d;
+  --cite-wash: rgba(240, 138, 93, 0.10);
+  --good: #4cc36f;
+  --warn: #e8b33c;
+  --crit: #f07167;
+  --series-1: #3f8fd6;
+  --series-2: #e0703a;
+  --series-3: #27a97c;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #008300;
+  --series-7: #9085e9;
+  --series-8: #e66767;
+  --series-neutral: #5f635c;
+  --shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 16px 40px -20px rgba(0, 0, 0, 0.7);
+}

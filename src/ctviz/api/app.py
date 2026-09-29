@@ -5,12 +5,14 @@ import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Annotated, Any
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from ctviz.agent.judge import Judge, build_judge
 from ctviz.agent.planner import Planner, build_planner
@@ -176,3 +178,9 @@ async def visualize(
     """Run the pipeline; failures are mapped by the registered exception handlers above."""
     today = datetime.now(UTC).date()
     return await run_pipeline(body, planner=planner, judge=judge, client=client, today=today)
+
+
+# The web UI (web/) is served at "/" -- mounted LAST so /v1/* and /health keep precedence.
+WEB_DIR = Path(__file__).resolve().parents[3] / "web"
+if WEB_DIR.is_dir():
+    app.mount("/", StaticFiles(directory=WEB_DIR, html=True), name="web")

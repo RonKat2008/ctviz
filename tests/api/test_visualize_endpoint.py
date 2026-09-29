@@ -11,7 +11,7 @@ import respx
 from fastapi.testclient import TestClient
 
 import ctviz.pipeline as pipeline_module
-from ctviz.agent.planner import CLIENT_UNAVAILABLE_MESSAGE, Planner
+from ctviz.agent.planner import CLIENT_AUTH_MESSAGE, Planner
 from ctviz.analysis.aggregate import AggregateResult
 from ctviz.api.app import app, get_ctgov_client, get_planner
 from ctviz.api.errors import to_response
@@ -238,7 +238,7 @@ def test_planner_sdk_error_never_leaks_a_key_fragment_into_the_api_response(
     assert "sk-" not in body_text
     assert key_fragment not in body_text
     assert sdk_message not in body_text
-    assert response.json()["error"]["message"] == CLIENT_UNAVAILABLE_MESSAGE
+    assert response.json()["error"]["message"] == CLIENT_AUTH_MESSAGE
 
 
 def test_plan_invalid_logs_a_warning_with_no_traceback(caplog: pytest.LogCaptureFixture) -> None:
@@ -378,7 +378,9 @@ def test_visualize_uses_the_injected_judge(dependency_overrides: dict) -> None:
     from tests.unit.agent.test_judge import ScriptedJudgeBackend, issue, verdict
 
     objection = verdict([issue("major", "visualization.type")])  # search_terms[0] is structured
-    judge = Judge(ScriptedJudgeBackend(objection, objection), model_name="judge-model")
+    judge = Judge(
+        ScriptedJudgeBackend(objection, objection, model="judge-model"), model_name="judge-model"
+    )
     dependency_overrides[get_planner] = lambda: Planner(FakeBackend(_plan()))
     dependency_overrides[get_judge] = lambda: judge
 

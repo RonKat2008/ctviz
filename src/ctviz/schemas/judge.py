@@ -51,6 +51,7 @@ class JudgeIssue(_Strict):
     severity: Severity
     category: IssueCategory
     plan_path: str
+    evidence_quote: str  # short verbatim quote from the question/fields/plan/probe; code checks it
     explanation: str
     suggested_fix: str
 

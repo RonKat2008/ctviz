@@ -1,0 +1,2 @@
+PASS -- 600 citations, 1200 evidence items, 600 predicates checked in 8ms
+exit code: 0

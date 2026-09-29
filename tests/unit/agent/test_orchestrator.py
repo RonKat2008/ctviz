@@ -10,6 +10,7 @@ import openai
 import pytest
 
 from ctviz.agent.judge import Judge
+from ctviz.agent.judge_backends import JudgeAnswer
 from ctviz.agent.orchestrator import (
     JUDGE_TEXT_MAX_CHARS,
     PlanningOutcome,
@@ -64,7 +65,7 @@ class _ThreadRecordingJudgeBackend(ScriptedJudgeBackend):
         super().__init__(*effects)
         self.threads: list[str] = []
 
-    def complete(self, system: str, user: str, budget_s: float = 0.0) -> JudgeVerdict:
+    def complete(self, system: str, user: str, budget_s: float = 0.0) -> JudgeAnswer:
         self.threads.append(threading.current_thread().name)
         return super().complete(system, user, budget_s)
 
@@ -77,7 +78,7 @@ class _SlowJudgeBackend(ScriptedJudgeBackend):
         self._clock, self._call_s = clock, call_s
         self.budgets: list[float] = []
 
-    def complete(self, system: str, user: str, budget_s: float = 0.0) -> JudgeVerdict:
+    def complete(self, system: str, user: str, budget_s: float = 0.0) -> JudgeAnswer:
         self.budgets.append(budget_s)
         self._clock.now += self._call_s
         return super().complete(system, user, budget_s)
@@ -624,7 +625,7 @@ async def test_orchestrate_flags_a_same_family_judge() -> None:
     outcome = await orchestrate(
         REQUEST,
         planner=Planner(ScriptedPlannerBackend(make_plan()), model_name="gpt-5.4-mini"),
-        judge=Judge(ScriptedJudgeBackend(PASS), model_name="gpt-4.1-nano"),
+        judge=Judge(ScriptedJudgeBackend(PASS, model="gpt-4.1-nano"), model_name="gpt-4.1-nano"),
         client=FakeProbeClient({"pembrolizumab": 5}),  # type: ignore[arg-type]
         today=TODAY,
     )

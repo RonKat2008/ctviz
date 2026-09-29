@@ -1,0 +1,3439 @@
+{
+  "run": {
+    "started": "2026-09-29T20:53:40Z",
+    "planner_model": "gpt-5.4-mini",
+    "judge_model": "google/gemini-2.5-flash-lite",
+    "label": "v4",
+    "judge_fallback_model": "anthropic/claude-haiku-4.5"
+  },
+  "runs": [
+    {
+      "id": "trend_pembro_since_2015",
+      "http_status": 200,
+      "raw_plans": [
+        {
+          "answerable": true,
+          "out_of_scope_reason": null,
+          "suggested_reframing": null,
+          "interpretation": "Show how the number of pembrolizumab trials changes by year, using trial start year buckets since 2015.",
+          "search_terms": [
+            {
+              "param": "query.intr",
+              "value": "pembrolizumab",
+              "source": "query_text",
+              "rationale": "Pembrolizumab is a drug intervention, so intervention search is the most specific match."
+            }
+          ],
+          "filters": {
+            "phases": null,
+            "overall_statuses": null,
+            "study_types": null,
+            "intervention_types": null,
+            "lead_sponsor_classes": null,
+            "countries": null,
+            "start_year_min": 2015,
+            "start_year_max": null,
+            "nct_ids": null
+          },
+          "comparison": null,
+          "analysis": {
+            "kind": "time_trend",
+            "group_by": null,
+            "series_by": null,
+            "phase_mode": null,
+            "time_field": "start_date",
+            "granularity": "year",
+            "measure_x": null,
+            "measure_y": null,
+            "color_by": null,
+            "network_type": null,
+            "top_n": null
+          },
+          "visualization": {
+            "type": "time_series",
+            "title": "Pembrolizumab trials by start year since 2015",
+            "rationale": "A time series is the appropriate visualization for a yearly trend over time."
+          },
+          "assumptions": [
+            "“Number of trials per year” is interpreted as trials bucketed by start date year."
+          ]
+        }
+      ],
+      "executed_plan": {
+        "answerable": true,
+        "out_of_scope_reason": null,
+        "suggested_reframing": null,
+        "interpretation": "Show how the number of pembrolizumab trials changes by year, using trial start year buckets since 2015.",
+        "search_terms": [
+          {
+            "param": "query.intr",
+            "value": "pembrolizumab",
+            "source": "query_text",
+            "rationale": "Pembrolizumab is a drug intervention, so intervention search is the most specific match."
+          }
+        ],
+        "filters": {
+          "phases": null,
+          "overall_statuses": null,
+          "study_types": null,
+          "intervention_types": null,
+          "lead_sponsor_classes": null,
+          "countries": null,
+          "start_year_min": 2015,
+          "start_year_max": null,
+          "nct_ids": null
+        },
+        "comparison": null,
+        "analysis": {
+          "kind": "time_trend",
+          "group_by": null,
+          "series_by": null,
+          "phase_mode": null,
+          "time_field": "start_date",
+          "granularity": "year",
+          "measure_x": null,
+          "measure_y": null,
+          "color_by": null,
+          "network_type": null,
+          "top_n": null
+        },
+        "visualization": {
+          "type": "time_series",
+          "title": "Pembrolizumab trials by start year since 2015",
+          "rationale": "A time series is the appropriate visualization for a yearly trend over time."
+        },
+        "assumptions": [
+          "“Number of trials per year” is interpreted as trials bucketed by start date year."
+        ]
+      },
+      "payload": {
+        "ok": true,
+        "error": null,
+        "meta": {
+          "plan": {
+            "answerable": true,
+            "out_of_scope_reason": null,
+            "suggested_reframing": null,
+            "interpretation": "Show how the number of pembrolizumab trials changes by year, using trial start year buckets since 2015.",
+            "search_terms": [
+              {
+                "param": "query.intr",
+                "value": "pembrolizumab",
+                "source": "query_text",
+                "rationale": "Pembrolizumab is a drug intervention, so intervention search is the most specific match."
+              }
+            ],
+            "filters": {
+              "phases": null,
+              "overall_statuses": null,
+              "study_types": null,
+              "intervention_types": null,
+              "lead_sponsor_classes": null,
+              "countries": null,
+              "start_year_min": 2015,
+              "start_year_max": null,
+              "nct_ids": null
+            },
+            "comparison": null,
+            "analysis": {
+              "kind": "time_trend",
+              "group_by": null,
+              "series_by": null,
+              "phase_mode": null,
+              "time_field": "start_date",
+              "granularity": "year",
+              "measure_x": null,
+              "measure_y": null,
+              "color_by": null,
+              "network_type": null,
+              "top_n": null
+            },
+            "visualization": {
+              "type": "time_series",
+              "title": "Pembrolizumab trials by start year since 2015",
+              "rationale": "A time series is the appropriate visualization for a yearly trend over time."
+            },
+            "assumptions": [
+              "“Number of trials per year” is interpreted as trials bucketed by start date year."
+            ]
+          },
+          "validation": {
+            "executed_attempt": 1,
+            "probe": [
+              {
+                "cohort": "pembrolizumab",
+                "total": 2896
+              }
+            ],
+            "judge": {
+              "status": "passed",
+              "model": "google/gemini-2.5-flash-lite",
+              "same_family": false,
+              "issues": []
+            },
+            "trace": [
+              {
+                "attempt": 1,
+                "step": "plan",
+                "answerable": true,
+                "overrides": 0
+              },
+              {
+                "attempt": 1,
+                "step": "checks",
+                "ok": true,
+                "errors": [],
+                "adjustments": []
+              },
+              {
+                "attempt": 1,
+                "step": "probe",
+                "verdict": "ok",
+                "totals": {
+                  "pembrolizumab": 2896
+                },
+                "feedback": [],
+                "warnings": []
+              },
+              {
+                "attempt": 1,
+                "step": "judge",
+                "model": "google/gemini-2.5-flash-lite",
+                "available": true,
+                "needs_revision": false,
+                "model_verdict": "pass",
+                "confidence": "high",
+                "failed_checks": [],
+                "issues": [],
+                "discarded_structured_slot_issues": 0
+              },
+              {
+                "step": "outcome",
+                "status": "passed",
+                "executed_attempt": 1
+              }
+            ]
+          },
+          "citation_check": {
+            "passed": true
+          }
+        }
+      },
+      "usages": [
+        {
+          "role": "planner",
+          "input_tokens": 3334,
+          "output_tokens": 408,
+          "cached_tokens": 0,
+          "model": null
+        },
+        {
+          "role": "judge",
+          "input_tokens": 2086,
+          "output_tokens": 516,
+          "cached_tokens": 0,
+          "model": "google/gemini-2.5-flash-lite"
+        }
+      ],
+      "judge_calls": 1,
+      "latency_s": 9.449764167016838
+    },
+    {
+      "id": "phase_breast_cancer",
+      "http_status": 200,
+      "raw_plans": [
+        {
+          "answerable": true,
+          "out_of_scope_reason": null,
+          "suggested_reframing": null,
+          "interpretation": "Show how trials for breast cancer are distributed across clinical phases.",
+          "search_terms": [
+            {
+              "param": "query.cond",
+              "value": "breast cancer",
+              "source": "query_text",
+              "rationale": "Breast cancer is a condition/indication, so the condition search is the most specific match."
+            }
+          ],
+          "filters": null,
+          "comparison": null,
+          "analysis": {
+            "kind": "count_by",
+            "group_by": "phase",
+            "series_by": null,
+            "phase_mode": "combined",
+            "time_field": null,
+            "granularity": null,
+            "measure_x": null,
+            "measure_y": null,
+            "color_by": null,
+            "network_type": null,
+            "top_n": null
+          },
+          "visualization": {
+            "type": "bar_chart",
+            "title": "Breast Cancer Trials by Phase",
+            "rationale": "A bar chart is the standard visualization for comparing counts across categorical phases."
+          },
+          "assumptions": []
+        }
+      ],
+      "executed_plan": {
+        "answerable": true,
+        "out_of_scope_reason": null,
+        "suggested_reframing": null,
+        "interpretation": "Show how trials for breast cancer are distributed across clinical phases.",
+        "search_terms": [
+          {
+            "param": "query.cond",
+            "value": "breast cancer",
+            "source": "query_text",
+            "rationale": "Breast cancer is a condition/indication, so the condition search is the most specific match."
+          }
+        ],
+        "filters": null,
+        "comparison": null,
+        "analysis": {
+          "kind": "count_by",
+          "group_by": "phase",
+          "series_by": null,
+          "phase_mode": "combined",
+          "time_field": null,
+          "granularity": null,
+          "measure_x": null,
+          "measure_y": null,
+          "color_by": null,
+          "network_type": null,
+          "top_n": null
+        },
+        "visualization": {
+          "type": "bar_chart",
+          "title": "Breast Cancer Trials by Phase",
+          "rationale": "A bar chart is the standard visualization for comparing counts across categorical phases."
+        },
+        "assumptions": []
+      },
+      "payload": {
+        "ok": true,
+        "error": null,
+        "meta": {
+          "plan": {
+            "answerable": true,
+            "out_of_scope_reason": null,
+            "suggested_reframing": null,
+            "interpretation": "Show how trials for breast cancer are distributed across clinical phases.",
+            "search_terms": [
+              {
+                "param": "query.cond",
+                "value": "breast cancer",
+                "source": "query_text",
+                "rationale": "Breast cancer is a condition/indication, so the condition search is the most specific match."
+              }
+            ],
+            "filters": null,
+            "comparison": null,
+            "analysis": {
+              "kind": "count_by",
+              "group_by": "phase",
+              "series_by": null,
+              "phase_mode": "combined",
+              "time_field": null,
+              "granularity": null,
+              "measure_x": null,
+              "measure_y": null,
+              "color_by": null,
+              "network_type": null,
+              "top_n": null
+            },
+            "visualization": {
+              "type": "bar_chart",
+              "title": "Breast Cancer Trials by Phase",
+              "rationale": "A bar chart is the standard visualization for comparing counts across categorical phases."
+            },
+            "assumptions": []
+          },
+          "validation": {
+            "executed_attempt": 1,
+            "probe": [
+              {
+                "cohort": "breast cancer",
+                "total": 16862
+              }
+            ],
+            "judge": {
+              "status": "passed",
+              "model": "google/gemini-2.5-flash-lite",
+              "same_family": false,
+              "issues": []
+            },
+            "trace": [
+              {
+                "attempt": 1,
+                "step": "plan",
+                "answerable": true,
+                "overrides": 0
+              },
+              {
+                "attempt": 1,
+                "step": "checks",
+                "ok": true,
+                "errors": [],
+                "adjustments": []
+              },
+              {
+                "attempt": 1,
+                "step": "probe",
+                "verdict": "ok",
+                "totals": {
+                  "breast cancer": 16862
+                },
+                "feedback": [],
+                "warnings": []
+              },
+              {
+                "attempt": 1,
+                "step": "judge",
+                "model": "google/gemini-2.5-flash-lite",
+                "available": true,
+                "needs_revision": false,
+                "model_verdict": "pass",
+                "confidence": "high",
+                "failed_checks": [],
+                "issues": [],
+                "discarded_structured_slot_issues": 0
+              },
+              {
+                "step": "outcome",
+                "status": "passed",
+                "executed_attempt": 1
+              }
+            ]
+          },
+          "citation_check": {
+            "passed": true
+          }
+        }
+      },
+      "usages": [
+        {
+          "role": "planner",
+          "input_tokens": 3324,
+          "output_tokens": 229,
+          "cached_tokens": 2816,
+          "model": null
+        },
+        {
+          "role": "judge",
+          "input_tokens": 1928,
+          "output_tokens": 404,
+          "cached_tokens": 0,
+          "model": "google/gemini-2.5-flash-lite"
+        }
+      ],
+      "judge_calls": 1,
+      "latency_s": 20.311895499995444
+    },
+    {
+      "id": "country_ms_recruiting",
+      "http_status": 200,
+      "raw_plans": [
+        {
+          "answerable": true,
+          "out_of_scope_reason": null,
+          "suggested_reframing": null,
+          "interpretation": "Compare countries by the number of recruiting multiple sclerosis trials and identify which countries have the highest counts.",
+          "search_terms": [
+            {
+              "param": "query.cond",
+              "value": "multiple sclerosis",
+              "source": "query_text",
+              "rationale": "Multiple sclerosis is the condition of interest, so condition search is the broadest and most precise match."
+            }
+          ],
+          "filters": {
+            "phases": null,
+            "overall_statuses": [
+              "RECRUITING"
+            ],
+            "study_types": null,
+            "intervention_types": null,
+            "lead_sponsor_classes": null,
+            "countries": null,
+            "start_year_min": null,
+            "start_year_max": null,
+            "nct_ids": null
+          },
+          "comparison": null,
+          "analysis": {
+            "kind": "count_by",
+            "group_by": "country",
+            "series_by": null,
+            "phase_mode": null,
+            "time_field": null,
+            "granularity": null,
+            "measure_x": null,
+            "measure_y": null,
+            "color_by": null,
+            "network_type": null,
+            "top_n": null
+          },
+          "visualization": {
+            "type": "bar_chart",
+            "title": "Recruiting Multiple Sclerosis Trials by Country",
+            "rationale": "A bar chart is the standard view for comparing counts across countries."
+          },
+          "assumptions": []
+        }
+      ],
+      "executed_plan": {
+        "answerable": true,
+        "out_of_scope_reason": null,
+        "suggested_reframing": null,
+        "interpretation": "Compare countries by the number of recruiting multiple sclerosis trials and identify which countries have the highest counts.",
+        "search_terms": [
+          {
+            "param": "query.cond",
+            "value": "multiple sclerosis",
+            "source": "query_text",
+            "rationale": "Multiple sclerosis is the condition of interest, so condition search is the broadest and most precise match."
+          }
+        ],
+        "filters": {
+          "phases": null,
+          "overall_statuses": [
+            "RECRUITING"
+          ],
+          "study_types": null,
+          "intervention_types": null,
+          "lead_sponsor_classes": null,
+          "countries": null,
+          "start_year_min": null,
+          "start_year_max": null,
+          "nct_ids": null
+        },
+        "comparison": null,
+        "analysis": {
+          "kind": "count_by",
+          "group_by": "country",
+          "series_by": null,
+          "phase_mode": null,
+          "time_field": null,
+          "granularity": null,
+          "measure_x": null,
+          "measure_y": null,
+          "color_by": null,
+          "network_type": null,
+          "top_n": null
+        },
+        "visualization": {
+          "type": "bar_chart",
+          "title": "Recruiting Multiple Sclerosis Trials by Country",
+          "rationale": "A bar chart is the standard view for comparing counts across countries."
+        },
+        "assumptions": []
+      },
+      "payload": {
+        "ok": true,
+        "error": null,
+        "meta": {
+          "plan": {
+            "answerable": true,
+            "out_of_scope_reason": null,
+            "suggested_reframing": null,
+            "interpretation": "Compare countries by the number of recruiting multiple sclerosis trials and identify which countries have the highest counts.",
+            "search_terms": [
+              {
+                "param": "query.cond",
+                "value": "multiple sclerosis",
+                "source": "query_text",
+                "rationale": "Multiple sclerosis is the condition of interest, so condition search is the broadest and most precise match."
+              }
+            ],
+            "filters": {
+              "phases": null,
+              "overall_statuses": [
+                "RECRUITING"
+              ],
+              "study_types": null,
+              "intervention_types": null,
+              "lead_sponsor_classes": null,
+              "countries": null,
+              "start_year_min": null,
+              "start_year_max": null,
+              "nct_ids": null
+            },
+            "comparison": null,
+            "analysis": {
+              "kind": "count_by",
+              "group_by": "country",
+              "series_by": null,
+              "phase_mode": null,
+              "time_field": null,
+              "granularity": null,
+              "measure_x": null,
+              "measure_y": null,
+              "color_by": null,
+              "network_type": null,
+              "top_n": null
+            },
+            "visualization": {
+              "type": "bar_chart",
+              "title": "Recruiting Multiple Sclerosis Trials by Country",
+              "rationale": "A bar chart is the standard view for comparing counts across countries."
+            },
+            "assumptions": []
+          },
+          "validation": {
+            "executed_attempt": 1,
+            "probe": [
+              {
+                "cohort": "multiple sclerosis",
+                "total": 431
+              }
+            ],
+            "judge": {
+              "status": "passed",
+              "model": "google/gemini-2.5-flash-lite",
+              "same_family": false,
+              "issues": []
+            },
+            "trace": [
+              {
+                "attempt": 1,
+                "step": "plan",
+                "answerable": true,
+                "overrides": 0
+              },
+              {
+                "attempt": 1,
+                "step": "checks",
+                "ok": true,
+                "errors": [],
+                "adjustments": []
+              },
+              {
+                "attempt": 1,
+                "step": "probe",
+                "verdict": "ok",
+                "totals": {
+                  "multiple sclerosis": 431
+                },
+                "feedback": [],
+                "warnings": []
+              },
+              {
+                "attempt": 1,
+                "step": "judge",
+                "model": "google/gemini-2.5-flash-lite",
+                "available": true,
+                "needs_revision": false,
+                "model_verdict": "pass",
+                "confidence": "high",
+                "failed_checks": [],
+                "issues": [],
+                "discarded_structured_slot_issues": 0
+              },
+              {
+                "step": "outcome",
+                "status": "passed",
+                "executed_attempt": 1
+              }
+            ]
+          },
+          "citation_check": {
+            "passed": true
+          }
+        }
+      },
+      "usages": [
+        {
+          "role": "planner",
+          "input_tokens": 3326,
+          "output_tokens": 337,
+          "cached_tokens": 2816,
+          "model": null
+        },
+        {
+          "role": "judge",
+          "input_tokens": 2032,
+          "output_tokens": 370,
+          "cached_tokens": 0,
+          "model": "google/gemini-2.5-flash-lite"
+        }
+      ],
+      "judge_calls": 1,
+      "latency_s": 5.770136040984653
+    },
+    {
+      "id": "histogram_psoriasis_p2",
+      "http_status": 200,
+      "raw_plans": [
+        {
+          "answerable": true,
+          "out_of_scope_reason": null,
+          "suggested_reframing": null,
+          "interpretation": "Show the distribution of enrollment sizes for trials studying psoriasis in Phase 2.",
+          "search_terms": [
+            {
+              "param": "query.cond",
+              "value": "psoriasis",
+              "source": "query_text",
+              "rationale": "Psoriasis is the condition being studied, so condition search is the most specific match."
+            }
+          ],
+          "filters": {
+            "phases": [
+              "PHASE2"
+            ],
+            "overall_statuses": null,
+            "study_types": null,
+            "intervention_types": null,
+            "lead_sponsor_classes": null,
+            "countries": null,
+            "start_year_min": null,
+            "start_year_max": null,
+            "nct_ids": null
+          },
+          "comparison": null,
+          "analysis": {
+            "kind": "histogram",
+            "group_by": null,
+            "series_by": null,
+            "phase_mode": null,
+            "time_field": null,
+            "granularity": null,
+            "measure_x": "enrollment",
+            "measure_y": null,
+            "color_by": null,
+            "network_type": null,
+            "top_n": null
+          },
+          "visualization": {
+            "type": "histogram",
+            "title": "Enrollment size distribution for Phase 2 psoriasis trials",
+            "rationale": "A histogram is the appropriate view for a numeric distribution such as enrollment size."
+          },
+          "assumptions": [
+            "\"Psoriasis\" refers to the disease/condition psoriasis."
+          ]
+        }
+      ],
+      "executed_plan": {
+        "answerable": true,
+        "out_of_scope_reason": null,
+        "suggested_reframing": null,
+        "interpretation": "Show the distribution of enrollment sizes for trials studying psoriasis in Phase 2.",
+        "search_terms": [
+          {
+            "param": "query.cond",
+            "value": "psoriasis",
+            "source": "query_text",
+            "rationale": "Psoriasis is the condition being studied, so condition search is the most specific match."
+          }
+        ],
+        "filters": {
+          "phases": [
+            "PHASE2"
+          ],
+          "overall_statuses": null,
+          "study_types": null,
+          "intervention_types": null,
+          "lead_sponsor_classes": null,
+          "countries": null,
+          "start_year_min": null,
+          "start_year_max": null,
+          "nct_ids": null
+        },
+        "comparison": null,
+        "analysis": {
+          "kind": "histogram",
+          "group_by": null,
+          "series_by": null,
+          "phase_mode": null,
+          "time_field": null,
+          "granularity": null,
+          "measure_x": "enrollment",
+          "measure_y": null,
+          "color_by": null,
+          "network_type": null,
+          "top_n": null
+        },
+        "visualization": {
+          "type": "histogram",
+          "title": "Enrollment size distribution for Phase 2 psoriasis trials",
+          "rationale": "A histogram is the appropriate view for a numeric distribution such as enrollment size."
+        },
+        "assumptions": [
+          "\"Psoriasis\" refers to the disease/condition psoriasis."
+        ]
+      },
+      "payload": {
+        "ok": true,
+        "error": null,
+        "meta": {
+          "plan": {
+            "answerable": true,
+            "out_of_scope_reason": null,
+            "suggested_reframing": null,
+            "interpretation": "Show the distribution of enrollment sizes for trials studying psoriasis in Phase 2.",
+            "search_terms": [
+              {
+                "param": "query.cond",
+                "value": "psoriasis",
+                "source": "query_text",
+                "rationale": "Psoriasis is the condition being studied, so condition search is the most specific match."
+              }
+            ],
+            "filters": {
+              "phases": [
+                "PHASE2"
+              ],
+              "overall_statuses": null,
+              "study_types": null,
+              "intervention_types": null,
+              "lead_sponsor_classes": null,
+              "countries": null,
+              "start_year_min": null,
+              "start_year_max": null,
+              "nct_ids": null
+            },
+            "comparison": null,
+            "analysis": {
+              "kind": "histogram",
+              "group_by": null,
+              "series_by": null,
+              "phase_mode": null,
+              "time_field": null,
+              "granularity": null,
+              "measure_x": "enrollment",
+              "measure_y": null,
+              "color_by": null,
+              "network_type": null,
+              "top_n": null
+            },
+            "visualization": {
+              "type": "histogram",
+              "title": "Enrollment size distribution for Phase 2 psoriasis trials",
+              "rationale": "A histogram is the appropriate view for a numeric distribution such as enrollment size."
+            },
+            "assumptions": [
+              "\"Psoriasis\" refers to the disease/condition psoriasis."
+            ]
+          },
+          "validation": {
+            "executed_attempt": 1,
+            "probe": [
+              {
+                "cohort": "psoriasis",
+                "total": 512
+              }
+            ],
+            "judge": {
+              "status": "passed",
+              "model": "google/gemini-2.5-flash-lite",
+              "same_family": false,
+              "issues": []
+            },
+            "trace": [
+              {
+                "attempt": 1,
+                "step": "plan",
+                "answerable": true,
+                "overrides": 0
+              },
+              {
+                "attempt": 1,
+                "step": "checks",
+                "ok": true,
+                "errors": [],
+                "adjustments": []
+              },
+              {
+                "attempt": 1,
+                "step": "probe",
+                "verdict": "ok",
+                "totals": {
+                  "psoriasis": 512
+                },
+                "feedback": [],
+                "warnings": []
+              },
+              {
+                "attempt": 1,
+                "step": "judge",
+                "model": "google/gemini-2.5-flash-lite",
+                "available": true,
+                "needs_revision": false,
+                "model_verdict": "pass",
+                "confidence": "high",
+                "failed_checks": [],
+                "issues": [],
+                "discarded_structured_slot_issues": 0
+              },
+              {
+                "step": "outcome",
+                "status": "passed",
+                "executed_attempt": 1
+              }
+            ]
+          },
+          "citation_check": {
+            "passed": true
+          }
+        }
+      },
+      "usages": [
+        {
+          "role": "planner",
+          "input_tokens": 3331,
+          "output_tokens": 333,
+          "cached_tokens": 2816,
+          "model": null
+        },
+        {
+          "role": "judge",
+          "input_tokens": 2053,
+          "output_tokens": 439,
+          "cached_tokens": 0,
+          "model": "google/gemini-2.5-flash-lite"
+        }
+      ],
+      "judge_calls": 1,
+      "latency_s": 5.999209834000794
+    },
+    {
+      "id": "scatter_crohns_p3_completed",
+      "http_status": 200,
+      "raw_plans": [
+        {
+          "answerable": true,
+          "out_of_scope_reason": null,
+          "suggested_reframing": null,
+          "interpretation": "Assess the relationship between enrollment size and trial duration among completed Phase 3 Crohn's disease trials.",
+          "search_terms": [
+            {
+              "param": "query.cond",
+              "value": "Crohn's disease",
+              "source": "query_text",
+              "rationale": "Crohn's disease is the condition of interest, so condition search is the most specific match."
+            }
+          ],
+          "filters": {
+            "phases": [
+              "PHASE3"
+            ],
+            "overall_statuses": [
+              "COMPLETED"
+            ],
+            "study_types": null,
+            "intervention_types": null,
+            "lead_sponsor_classes": null,
+            "countries": null,
+            "start_year_min": null,
+            "start_year_max": null,
+            "nct_ids": null
+          },
+          "comparison": null,
+          "analysis": {
+            "kind": "scatter",
+            "group_by": null,
+            "series_by": null,
+            "phase_mode": null,
+            "time_field": null,
+            "granularity": null,
+            "measure_x": "enrollment",
+            "measure_y": "duration_months",
+            "color_by": null,
+            "network_type": null,
+            "top_n": null
+          },
+          "visualization": {
+            "type": "scatter_plot",
+            "title": "Enrollment vs Trial Duration for Completed Phase 3 Crohn's Disease Trials",
+            "rationale": "A scatter plot is the right view for examining the relationship between two numeric measures."
+          },
+          "assumptions": [
+            "'Crohn's disease' is treated as the primary condition term."
+          ]
+        }
+      ],
+      "executed_plan": {
+        "answerable": true,
+        "out_of_scope_reason": null,
+        "suggested_reframing": null,
+        "interpretation": "Assess the relationship between enrollment size and trial duration among completed Phase 3 Crohn's disease trials.",
+        "search_terms": [
+          {
+            "param": "query.cond",
+            "value": "Crohn's disease",
+            "source": "query_text",
+            "rationale": "Crohn's disease is the condition of interest, so condition search is the most specific match."
+          }
+        ],
+        "filters": {
+          "phases": [
+            "PHASE3"
+          ],
+          "overall_statuses": [
+            "COMPLETED"
+          ],
+          "study_types": null,
+          "intervention_types": null,
+          "lead_sponsor_classes": null,
+          "countries": null,
+          "start_year_min": null,
+          "start_year_max": null,
+          "nct_ids": null
+        },
+        "comparison": null,
+        "analysis": {
+          "kind": "scatter",
+          "group_by": null,
+          "series_by": null,
+          "phase_mode": null,
+          "time_field": null,
+          "granularity": null,
+          "measure_x": "enrollment",
+          "measure_y": "duration_months",
+          "color_by": null,
+          "network_type": null,
+          "top_n": null
+        },
+        "visualization": {
+          "type": "scatter_plot",
+          "title": "Enrollment vs Trial Duration for Completed Phase 3 Crohn's Disease Trials",
+          "rationale": "A scatter plot is the right view for examining the relationship between two numeric measures."
+        },
+        "assumptions": [
+          "'Crohn's disease' is treated as the primary condition term."
+        ]
+      },
+      "payload": {
+        "ok": true,
+        "error": null,
+        "meta": {
+          "plan": {
+            "answerable": true,
+            "out_of_scope_reason": null,
+            "suggested_reframing": null,
+            "interpretation": "Assess the relationship between enrollment size and trial duration among completed Phase 3 Crohn's disease trials.",
+            "search_terms": [
+              {
+                "param": "query.cond",
+                "value": "Crohn's disease",
+                "source": "query_text",
+                "rationale": "Crohn's disease is the condition of interest, so condition search is the most specific match."
+              }
+            ],
+            "filters": {
+              "phases": [
+                "PHASE3"
+              ],
+              "overall_statuses": [
+                "COMPLETED"
+              ],
+              "study_types": null,
+              "intervention_types": null,
+              "lead_sponsor_classes": null,
+              "countries": null,
+              "start_year_min": null,
+              "start_year_max": null,
+              "nct_ids": null
+            },
+            "comparison": null,
+            "analysis": {
+              "kind": "scatter",
+              "group_by": null,
+              "series_by": null,
+              "phase_mode": null,
+              "time_field": null,
+              "granularity": null,
+              "measure_x": "enrollment",
+              "measure_y": "duration_months",
+              "color_by": null,
+              "network_type": null,
+              "top_n": null
+            },
+            "visualization": {
+              "type": "scatter_plot",
+              "title": "Enrollment vs Trial Duration for Completed Phase 3 Crohn's Disease Trials",
+              "rationale": "A scatter plot is the right view for examining the relationship between two numeric measures."
+            },
+            "assumptions": [
+              "'Crohn's disease' is treated as the primary condition term."
+            ]
+          },
+          "validation": {
+            "executed_attempt": 1,
+            "probe": [
+              {
+                "cohort": "Crohn's disease",
+                "total": 127
+              }
+            ],
+            "judge": {
+              "status": "passed",
+              "model": "google/gemini-2.5-flash-lite",
+              "same_family": false,
+              "issues": []
+            },
+            "trace": [
+              {
+                "attempt": 1,
+                "step": "plan",
+                "answerable": true,
+                "overrides": 0
+              },
+              {
+                "attempt": 1,
+                "step": "checks",
+                "ok": true,
+                "errors": [],
+                "adjustments": []
+              },
+              {
+                "attempt": 1,
+                "step": "probe",
+                "verdict": "ok",
+                "totals": {
+                  "Crohn's disease": 127
+                },
+                "feedback": [],
+                "warnings": []
+              },
+              {
+                "attempt": 1,
+                "step": "judge",
+                "model": "google/gemini-2.5-flash-lite",
+                "available": true,
+                "needs_revision": false,
+                "model_verdict": "pass",
+                "confidence": "high",
+                "failed_checks": [],
+                "issues": [],
+                "discarded_structured_slot_issues": 0
+              },
+              {
+                "step": "outcome",
+                "status": "passed",
+                "executed_attempt": 1
+              }
+            ]
+          },
+          "citation_check": {
+            "passed": true
+          }
+        }
+      },
+      "usages": [
+        {
+          "role": "planner",
+          "input_tokens": 3335,
+          "output_tokens": 366,
+          "cached_tokens": 2816,
+          "model": null
+        },
+        {
+          "role": "judge",
+          "input_tokens": 2088,
+          "output_tokens": 455,
+          "cached_tokens": 0,
+          "model": "google/gemini-2.5-flash-lite"
+        }
+      ],
+      "judge_calls": 1,
+      "latency_s": 5.401350750005804
+    },
+    {
+      "id": "network_gbm_sponsor_drug",
+      "http_status": 200,
+      "raw_plans": [
+        {
+          "answerable": true,
+          "out_of_scope_reason": null,
+          "suggested_reframing": null,
+          "interpretation": "Show a sponsor–drug network for trials in glioblastoma, linking each lead sponsor to the drugs it is testing.",
+          "search_terms": [
+            {
+              "param": "query.cond",
+              "value": "glioblastoma",
+              "source": "query_text",
+              "rationale": "Identifies trials by the disease of interest."
+            }
+          ],
+          "filters": null,
+          "comparison": null,
+          "analysis": {
+            "kind": "network",
+            "group_by": null,
+            "series_by": null,
+            "phase_mode": null,
+            "time_field": null,
+            "granularity": null,
+            "measure_x": null,
+            "measure_y": null,
+            "color_by": null,
+            "network_type": "sponsor_drug",
+            "top_n": null
+          },
+          "visualization": {
+            "type": "network_graph",
+            "title": "Sponsor–Drug Network in Glioblastoma",
+            "rationale": "A network graph best shows which sponsors are connected to which drugs across glioblastoma trials."
+          },
+          "assumptions": [
+            "Interpreting 'sponsors' as lead sponsors."
+          ]
+        }
+      ],
+      "executed_plan": {
+        "answerable": true,
+        "out_of_scope_reason": null,
+        "suggested_reframing": null,
+        "interpretation": "Show a sponsor–drug network for trials in glioblastoma, linking each lead sponsor to the drugs it is testing.",
+        "search_terms": [
+          {
+            "param": "query.cond",
+            "value": "glioblastoma",
+            "source": "query_text",
+            "rationale": "Identifies trials by the disease of interest."
+          }
+        ],
+        "filters": null,
+        "comparison": null,
+        "analysis": {
+          "kind": "network",
+          "group_by": null,
+          "series_by": null,
+          "phase_mode": null,
+          "time_field": null,
+          "granularity": null,
+          "measure_x": null,
+          "measure_y": null,
+          "color_by": null,
+          "network_type": "sponsor_drug",
+          "top_n": null
+        },
+        "visualization": {
+          "type": "network_graph",
+          "title": "Sponsor–Drug Network in Glioblastoma",
+          "rationale": "A network graph best shows which sponsors are connected to which drugs across glioblastoma trials."
+        },
+        "assumptions": [
+          "Interpreting 'sponsors' as lead sponsors."
+        ]
+      },
+      "payload": {
+        "ok": true,
+        "error": null,
+        "meta": {
+          "plan": {
+            "answerable": true,
+            "out_of_scope_reason": null,
+            "suggested_reframing": null,
+            "interpretation": "Show a sponsor–drug network for trials in glioblastoma, linking each lead sponsor to the drugs it is testing.",
+            "search_terms": [
+              {
+                "param": "query.cond",
+                "value": "glioblastoma",
+                "source": "query_text",
+                "rationale": "Identifies trials by the disease of interest."
+              }
+            ],
+            "filters": null,
+            "comparison": null,
+            "analysis": {
+              "kind": "network",
+              "group_by": null,
+              "series_by": null,
+              "phase_mode": null,
+              "time_field": null,
+              "granularity": null,
+              "measure_x": null,
+              "measure_y": null,
+              "color_by": null,
+              "network_type": "sponsor_drug",
+              "top_n": null
+            },
+            "visualization": {
+              "type": "network_graph",
+              "title": "Sponsor–Drug Network in Glioblastoma",
+              "rationale": "A network graph best shows which sponsors are connected to which drugs across glioblastoma trials."
+            },
+            "assumptions": [
+              "Interpreting 'sponsors' as lead sponsors."
+            ]
+          },
+          "validation": {
+            "executed_attempt": 1,
+            "probe": [
+              {
+                "cohort": "glioblastoma",
+                "total": 2268
+              }
+            ],
+            "judge": {
+              "status": "passed",
+              "model": "google/gemini-2.5-flash-lite",
+              "same_family": false,
+              "issues": []
+            },
+            "trace": [
+              {
+                "attempt": 1,
+                "step": "plan",
+                "answerable": true,
+                "overrides": 0
+              },
+              {
+                "attempt": 1,
+                "step": "checks",
+                "ok": true,
+                "errors": [],
+                "adjustments": []
+              },
+              {
+                "attempt": 1,
+                "step": "probe",
+                "verdict": "ok",
+                "totals": {
+                  "glioblastoma": 2268
+                },
+                "feedback": [],
+                "warnings": []
+              },
+              {
+                "attempt": 1,
+                "step": "judge",
+                "model": "google/gemini-2.5-flash-lite",
+                "available": true,
+                "needs_revision": false,
+                "model_verdict": "pass",
+                "confidence": "high",
+                "failed_checks": [],
+                "issues": [],
+                "discarded_structured_slot_issues": 0
+              },
+              {
+                "step": "outcome",
+                "status": "passed",
+                "executed_attempt": 1
+              }
+            ]
+          },
+          "citation_check": {
+            "passed": true
+          }
+        }
+      },
+      "usages": [
+        {
+          "role": "planner",
+          "input_tokens": 3331,
+          "output_tokens": 269,
+          "cached_tokens": 2816,
+          "model": null
+        },
+        {
+          "role": "judge",
+          "input_tokens": 1970,
+          "output_tokens": 447,
+          "cached_tokens": 0,
+          "model": "google/gemini-2.5-flash-lite"
+        }
+      ],
+      "judge_calls": 1,
+      "latency_s": 7.479066207975848
+    },
+    {
+      "id": "compare_pembro_nivo_phases",
+      "http_status": 200,
+      "raw_plans": [
+        {
+          "answerable": true,
+          "out_of_scope_reason": null,
+          "suggested_reframing": null,
+          "interpretation": "Compare the phase distribution of trials involving pembrolizumab versus nivolumab.",
+          "search_terms": [
+            {
+              "param": "query.intr",
+              "value": "pembrolizumab",
+              "source": "query_text",
+              "rationale": "Matches trials whose interventions, arm labels, keywords, or intervention terms mention pembrolizumab."
+            },
+            {
+              "param": "query.intr",
+              "value": "nivolumab",
+              "source": "query_text",
+              "rationale": "Matches trials whose interventions, arm labels, keywords, or intervention terms mention nivolumab."
+            }
+          ],
+          "filters": null,
+          "comparison": {
+            "vary_param": "query.intr",
+            "values": [
+              "pembrolizumab",
+              "nivolumab"
+            ]
+          },
+          "analysis": {
+            "kind": "count_by",
+            "group_by": "phase",
+            "series_by": "intervention",
+            "phase_mode": "combined",
+            "time_field": null,
+            "granularity": null,
+            "measure_x": null,
+            "measure_y": null,
+            "color_by": null,
+            "network_type": null,
+            "top_n": null
+          },
+          "visualization": {
+            "type": "grouped_bar_chart",
+            "title": "Trial phases for pembrolizumab vs nivolumab",
+            "rationale": "A grouped bar chart best compares counts across phase categories for two intervention cohorts."
+          },
+          "assumptions": [
+            "'Involving' is interpreted as matching trials where the intervention name appears in the intervention fields, keywords, or related intervention text."
+          ]
+        }
+      ],
+      "executed_plan": {
+        "answerable": true,
+        "out_of_scope_reason": null,
+        "suggested_reframing": null,
+        "interpretation": "Compare the phase distribution of trials involving pembrolizumab versus nivolumab.",
+        "search_terms": [],
+        "filters": null,
+        "comparison": {
+          "vary_param": "query.intr",
+          "values": [
+            "pembrolizumab",
+            "nivolumab"
+          ]
+        },
+        "analysis": {
+          "kind": "count_by",
+          "group_by": "phase",
+          "series_by": "intervention",
+          "phase_mode": "combined",
+          "time_field": null,
+          "granularity": null,
+          "measure_x": null,
+          "measure_y": null,
+          "color_by": null,
+          "network_type": null,
+          "top_n": null
+        },
+        "visualization": {
+          "type": "grouped_bar_chart",
+          "title": "Trial phases for pembrolizumab vs nivolumab",
+          "rationale": "A grouped bar chart best compares counts across phase categories for two intervention cohorts."
+        },
+        "assumptions": [
+          "'Involving' is interpreted as matching trials where the intervention name appears in the intervention fields, keywords, or related intervention text."
+        ]
+      },
+      "payload": {
+        "ok": true,
+        "error": null,
+        "meta": {
+          "plan": {
+            "answerable": true,
+            "out_of_scope_reason": null,
+            "suggested_reframing": null,
+            "interpretation": "Compare the phase distribution of trials involving pembrolizumab versus nivolumab.",
+            "search_terms": [],
+            "filters": null,
+            "comparison": {
+              "vary_param": "query.intr",
+              "values": [
+                "pembrolizumab",
+                "nivolumab"
+              ]
+            },
+            "analysis": {
+              "kind": "count_by",
+              "group_by": "phase",
+              "series_by": "intervention",
+              "phase_mode": "combined",
+              "time_field": null,
+              "granularity": null,
+              "measure_x": null,
+              "measure_y": null,
+              "color_by": null,
+              "network_type": null,
+              "top_n": null
+            },
+            "visualization": {
+              "type": "grouped_bar_chart",
+              "title": "Trial phases for pembrolizumab vs nivolumab",
+              "rationale": "A grouped bar chart best compares counts across phase categories for two intervention cohorts."
+            },
+            "assumptions": [
+              "'Involving' is interpreted as matching trials where the intervention name appears in the intervention fields, keywords, or related intervention text."
+            ]
+          },
+          "validation": {
+            "executed_attempt": 1,
+            "probe": [
+              {
+                "cohort": "pembrolizumab",
+                "total": 2961
+              },
+              {
+                "cohort": "nivolumab",
+                "total": 2025
+              }
+            ],
+            "judge": {
+              "status": "passed",
+              "model": "google/gemini-2.5-flash-lite",
+              "same_family": false,
+              "issues": []
+            },
+            "trace": [
+              {
+                "attempt": 1,
+                "step": "plan",
+                "answerable": true,
+                "overrides": 0
+              },
+              {
+                "attempt": 1,
+                "step": "checks",
+                "ok": true,
+                "errors": [],
+                "adjustments": [
+                  "search term query.intr='pembrolizumab' dropped: it is one of the compared values (the comparison varies query.intr)",
+                  "search term query.intr='nivolumab' dropped: it is one of the compared values (the comparison varies query.intr)"
+                ]
+              },
+              {
+                "attempt": 1,
+                "step": "probe",
+                "verdict": "ok",
+                "totals": {
+                  "pembrolizumab": 2961,
+                  "nivolumab": 2025
+                },
+                "feedback": [],
+                "warnings": []
+              },
+              {
+                "attempt": 1,
+                "step": "judge",
+                "model": "google/gemini-2.5-flash-lite",
+                "available": true,
+                "needs_revision": false,
+                "model_verdict": "pass",
+                "confidence": "high",
+                "failed_checks": [],
+                "issues": [],
+                "discarded_structured_slot_issues": 0
+              },
+              {
+                "step": "outcome",
+                "status": "passed",
+                "executed_attempt": 1
+              }
+            ]
+          },
+          "citation_check": {
+            "passed": true
+          }
+        }
+      },
+      "usages": [
+        {
+          "role": "planner",
+          "input_tokens": 3329,
+          "output_tokens": 355,
+          "cached_tokens": 2816,
+          "model": null
+        },
+        {
+          "role": "judge",
+          "input_tokens": 1963,
+          "output_tokens": 513,
+          "cached_tokens": 0,
+          "model": "google/gemini-2.5-flash-lite"
+        }
+      ],
+      "judge_calls": 1,
+      "latency_s": 8.08605329200509
+    },
+    {
+      "id": "sponsor_lead_merck_status",
+      "http_status": 200,
+      "raw_plans": [
+        {
+          "answerable": true,
+          "out_of_scope_reason": null,
+          "suggested_reframing": null,
+          "interpretation": "Compare the recruitment-status mix for Merck-sponsored Phase 3 trials, focusing on completed versus terminated studies.",
+          "search_terms": [
+            {
+              "param": "query.lead",
+              "value": "Merck",
+              "source": "query_text",
+              "rationale": "The question asks about Merck's trials, so the lead sponsor name is the relevant sponsor search."
+            }
+          ],
+          "filters": {
+            "phases": [
+              "PHASE3"
+            ],
+            "overall_statuses": [
+              "COMPLETED",
+              "TERMINATED"
+            ],
+            "study_types": null,
+            "intervention_types": null,
+            "lead_sponsor_classes": null,
+            "countries": null,
+            "start_year_min": null,
+            "start_year_max": null,
+            "nct_ids": null
+          },
+          "comparison": null,
+          "analysis": {
+            "kind": "count_by",
+            "group_by": "overall_status",
+            "series_by": null,
+            "phase_mode": null,
+            "time_field": null,
+            "granularity": null,
+            "measure_x": null,
+            "measure_y": null,
+            "color_by": null,
+            "network_type": null,
+            "top_n": null
+          },
+          "visualization": {
+            "type": "bar_chart",
+            "title": "Merck Phase 3 trials by overall status",
+            "rationale": "A bar chart is the simplest way to show the share of Phase 3 trials that ended as completed versus terminated."
+          },
+          "assumptions": [
+            "'Merck' is interpreted broadly as lead sponsors whose names contain Merck, such as Merck & Co. and Merck Sharp & Dohme.",
+            "The question is interpreted as asking for the status distribution within Merck Phase 3 trials, not a time trend or cohort comparison."
+          ]
+        }
+      ],
+      "executed_plan": {
+        "answerable": true,
+        "out_of_scope_reason": null,
+        "suggested_reframing": null,
+        "interpretation": "Compare the recruitment-status mix for Merck-sponsored Phase 3 trials, focusing on completed versus terminated studies.",
+        "search_terms": [
+          {
+            "param": "query.lead",
+            "value": "Merck",
+            "source": "query_text",
+            "rationale": "The question asks about Merck's trials, so the lead sponsor name is the relevant sponsor search."
+          }
+        ],
+        "filters": {
+          "phases": [
+            "PHASE3"
+          ],
+          "overall_statuses": [
+            "COMPLETED",
+            "TERMINATED"
+          ],
+          "study_types": null,
+          "intervention_types": null,
+          "lead_sponsor_classes": null,
+          "countries": null,
+          "start_year_min": null,
+          "start_year_max": null,
+          "nct_ids": null
+        },
+        "comparison": null,
+        "analysis": {
+          "kind": "count_by",
+          "group_by": "overall_status",
+          "series_by": null,
+          "phase_mode": null,
+          "time_field": null,
+          "granularity": null,
+          "measure_x": null,
+          "measure_y": null,
+          "color_by": null,
+          "network_type": null,
+          "top_n": null
+        },
+        "visualization": {
+          "type": "bar_chart",
+          "title": "Merck Phase 3 trials by overall status",
+          "rationale": "A bar chart is the simplest way to show the share of Phase 3 trials that ended as completed versus terminated."
+        },
+        "assumptions": [
+          "'Merck' is interpreted broadly as lead sponsors whose names contain Merck, such as Merck & Co. and Merck Sharp & Dohme.",
+          "The question is interpreted as asking for the status distribution within Merck Phase 3 trials, not a time trend or cohort comparison."
+        ]
+      },
+      "payload": {
+        "ok": true,
+        "error": null,
+        "meta": {
+          "plan": {
+            "answerable": true,
+            "out_of_scope_reason": null,
+            "suggested_reframing": null,
+            "interpretation": "Compare the recruitment-status mix for Merck-sponsored Phase 3 trials, focusing on completed versus terminated studies.",
+            "search_terms": [
+              {
+                "param": "query.lead",
+                "value": "Merck",
+                "source": "query_text",
+                "rationale": "The question asks about Merck's trials, so the lead sponsor name is the relevant sponsor search."
+              }
+            ],
+            "filters": {
+              "phases": [
+                "PHASE3"
+              ],
+              "overall_statuses": [
+                "COMPLETED",
+                "TERMINATED"
+              ],
+              "study_types": null,
+              "intervention_types": null,
+              "lead_sponsor_classes": null,
+              "countries": null,
+              "start_year_min": null,
+              "start_year_max": null,
+              "nct_ids": null
+            },
+            "comparison": null,
+            "analysis": {
+              "kind": "count_by",
+              "group_by": "overall_status",
+              "series_by": null,
+              "phase_mode": null,
+              "time_field": null,
+              "granularity": null,
+              "measure_x": null,
+              "measure_y": null,
+              "color_by": null,
+              "network_type": null,
+              "top_n": null
+            },
+            "visualization": {
+              "type": "bar_chart",
+              "title": "Merck Phase 3 trials by overall status",
+              "rationale": "A bar chart is the simplest way to show the share of Phase 3 trials that ended as completed versus terminated."
+            },
+            "assumptions": [
+              "'Merck' is interpreted broadly as lead sponsors whose names contain Merck, such as Merck & Co. and Merck Sharp & Dohme.",
+              "The question is interpreted as asking for the status distribution within Merck Phase 3 trials, not a time trend or cohort comparison."
+            ]
+          },
+          "validation": {
+            "executed_attempt": 1,
+            "probe": [
+              {
+                "cohort": "Merck",
+                "total": 712
+              }
+            ],
+            "judge": {
+              "status": "passed",
+              "model": "google/gemini-2.5-flash-lite",
+              "same_family": false,
+              "issues": []
+            },
+            "trace": [
+              {
+                "attempt": 1,
+                "step": "plan",
+                "answerable": true,
+                "overrides": 0
+              },
+              {
+                "attempt": 1,
+                "step": "checks",
+                "ok": true,
+                "errors": [],
+                "adjustments": []
+              },
+              {
+                "attempt": 1,
+                "step": "probe",
+                "verdict": "ok",
+                "totals": {
+                  "Merck": 712
+                },
+                "feedback": [],
+                "warnings": []
+              },
+              {
+                "attempt": 1,
+                "step": "judge",
+                "model": "google/gemini-2.5-flash-lite",
+                "available": true,
+                "needs_revision": false,
+                "model_verdict": "pass",
+                "confidence": "high",
+                "failed_checks": [],
+                "issues": [],
+                "discarded_structured_slot_issues": 0
+              },
+              {
+                "step": "outcome",
+                "status": "passed",
+                "executed_attempt": 1
+              }
+            ]
+          },
+          "citation_check": {
+            "passed": true
+          }
+        }
+      },
+      "usages": [
+        {
+          "role": "planner",
+          "input_tokens": 3330,
+          "output_tokens": 580,
+          "cached_tokens": 2816,
+          "model": null
+        },
+        {
+          "role": "judge",
+          "input_tokens": 2127,
+          "output_tokens": 560,
+          "cached_tokens": 0,
+          "model": "google/gemini-2.5-flash-lite"
+        }
+      ],
+      "judge_calls": 1,
+      "latency_s": 7.670130125014111
+    },
+    {
+      "id": "nct_lookup_status",
+      "http_status": 200,
+      "raw_plans": [],
+      "executed_plan": {
+        "answerable": true,
+        "out_of_scope_reason": null,
+        "suggested_reframing": null,
+        "interpretation": "Key facts for NCT04368728.",
+        "search_terms": [],
+        "filters": {
+          "phases": null,
+          "overall_statuses": null,
+          "study_types": null,
+          "intervention_types": null,
+          "lead_sponsor_classes": null,
+          "countries": null,
+          "start_year_min": null,
+          "start_year_max": null,
+          "nct_ids": [
+            "NCT04368728"
+          ]
+        },
+        "comparison": null,
+        "analysis": {
+          "kind": "trial_lookup",
+          "group_by": null,
+          "series_by": null,
+          "phase_mode": null,
+          "time_field": null,
+          "granularity": null,
+          "measure_x": null,
+          "measure_y": null,
+          "color_by": null,
+          "network_type": null,
+          "top_n": null
+        },
+        "visualization": {
+          "type": "table",
+          "title": "Key facts: NCT04368728",
+          "rationale": "NCT-ID fast path"
+        },
+        "assumptions": [
+          "Answered by the NCT-ID fast path: no LLM planned or judged this request."
+        ]
+      },
+      "payload": {
+        "ok": true,
+        "error": null,
+        "meta": {
+          "plan": {
+            "answerable": true,
+            "out_of_scope_reason": null,
+            "suggested_reframing": null,
+            "interpretation": "Key facts for NCT04368728.",
+            "search_terms": [],
+            "filters": {
+              "phases": null,
+              "overall_statuses": null,
+              "study_types": null,
+              "intervention_types": null,
+              "lead_sponsor_classes": null,
+              "countries": null,
+              "start_year_min": null,
+              "start_year_max": null,
+              "nct_ids": [
+                "NCT04368728"
+              ]
+            },
+            "comparison": null,
+            "analysis": {
+              "kind": "trial_lookup",
+              "group_by": null,
+              "series_by": null,
+              "phase_mode": null,
+              "time_field": null,
+              "granularity": null,
+              "measure_x": null,
+              "measure_y": null,
+              "color_by": null,
+              "network_type": null,
+              "top_n": null
+            },
+            "visualization": {
+              "type": "table",
+              "title": "Key facts: NCT04368728",
+              "rationale": "NCT-ID fast path"
+            },
+            "assumptions": [
+              "Answered by the NCT-ID fast path: no LLM planned or judged this request."
+            ]
+          },
+          "validation": {
+            "executed_attempt": 1,
+            "probe": [
+              {
+                "cohort": "All trials",
+                "total": 1
+              }
+            ],
+            "judge": {
+              "status": "skipped",
+              "model": null,
+              "same_family": false,
+              "issues": []
+            },
+            "trace": [
+              {
+                "step": "fast_path",
+                "nct_ids": [
+                  "NCT04368728"
+                ]
+              },
+              {
+                "step": "probe",
+                "verdict": "ok",
+                "totals": {
+                  "All trials": 1
+                },
+                "feedback": [],
+                "warnings": []
+              },
+              {
+                "step": "outcome",
+                "status": "skipped",
+                "executed_attempt": 1
+              }
+            ]
+          },
+          "citation_check": {
+            "passed": true
+          }
+        }
+      },
+      "usages": [],
+      "judge_calls": 0,
+      "latency_s": 0.7124700420245063
+    },
+    {
+      "id": "misspelled_drug_field",
+      "http_status": 200,
+      "raw_plans": [
+        {
+          "answerable": true,
+          "out_of_scope_reason": null,
+          "suggested_reframing": null,
+          "interpretation": "Count trials for the specified drug, grouped by phase.",
+          "search_terms": [],
+          "filters": null,
+          "comparison": null,
+          "analysis": {
+            "kind": "count_by",
+            "group_by": "phase",
+            "series_by": null,
+            "phase_mode": "combined",
+            "time_field": null,
+            "granularity": null,
+            "measure_x": null,
+            "measure_y": null,
+            "color_by": null,
+            "network_type": null,
+            "top_n": null
+          },
+          "visualization": {
+            "type": "bar_chart",
+            "title": "Trials by phase for the specified drug",
+            "rationale": "A bar chart is the standard way to show counts across categorical phase buckets."
+          },
+          "assumptions": [
+            "The structured drug_name field is applied automatically."
+          ]
+        },
+        {
+          "answerable": true,
+          "out_of_scope_reason": null,
+          "suggested_reframing": null,
+          "interpretation": "Count trials for the specified drug, grouped by phase.",
+          "search_terms": [],
+          "filters": null,
+          "comparison": null,
+          "analysis": {
+            "kind": "count_by",
+            "group_by": "phase",
+            "series_by": null,
+            "phase_mode": "combined",
+            "time_field": null,
+            "granularity": null,
+            "measure_x": null,
+            "measure_y": null,
+            "color_by": null,
+            "network_type": null,
+            "top_n": null
+          },
+          "visualization": {
+            "type": "bar_chart",
+            "title": "Trials by phase for the specified drug",
+            "rationale": "A bar chart is the standard way to show counts across categorical phase buckets."
+          },
+          "assumptions": [
+            "The structured drug_name field is applied automatically."
+          ]
+        }
+      ],
+      "executed_plan": null,
+      "payload": {
+        "ok": false,
+        "error": {
+          "code": "NO_MATCHING_TRIALS",
+          "message": "No trials on ClinicalTrials.gov match this question, even after one revision. Try dropping or loosening: query.intr='pembrolizumap'",
+          "details": {
+            "probe": [
+              {
+                "cohort": "pembrolizumap",
+                "total": 0
+              }
+            ],
+            "filters_to_drop": [
+              "query.intr='pembrolizumap'"
+            ]
+          }
+        },
+        "meta": null
+      },
+      "usages": [
+        {
+          "role": "planner",
+          "input_tokens": 3327,
+          "output_tokens": 484,
+          "cached_tokens": 2816,
+          "model": null
+        },
+        {
+          "role": "planner",
+          "input_tokens": 3497,
+          "output_tokens": 284,
+          "cached_tokens": 2816,
+          "model": null
+        }
+      ],
+      "judge_calls": 0,
+      "latency_s": 7.2873514580132905
+    },
+    {
+      "id": "ambiguous_recent_obesity",
+      "http_status": 200,
+      "raw_plans": [
+        {
+          "answerable": true,
+          "out_of_scope_reason": null,
+          "suggested_reframing": null,
+          "interpretation": "Show how obesity trials have changed over time, using trial starts as the trend axis.",
+          "search_terms": [
+            {
+              "param": "query.cond",
+              "value": "obesity",
+              "source": "query_text",
+              "rationale": "Obesity is a condition/indication, so condition search is the broadest and most appropriate match."
+            }
+          ],
+          "filters": {
+            "phases": null,
+            "overall_statuses": null,
+            "study_types": null,
+            "intervention_types": null,
+            "lead_sponsor_classes": null,
+            "countries": null,
+            "start_year_min": 2021,
+            "start_year_max": null,
+            "nct_ids": null
+          },
+          "comparison": null,
+          "analysis": {
+            "kind": "time_trend",
+            "group_by": null,
+            "series_by": null,
+            "phase_mode": null,
+            "time_field": "start_date",
+            "granularity": "year",
+            "measure_x": null,
+            "measure_y": null,
+            "color_by": null,
+            "network_type": null,
+            "top_n": null
+          },
+          "visualization": {
+            "type": "time_series",
+            "title": "Recent Trends in Obesity Trials",
+            "rationale": "A time series is the right view for showing year-by-year changes in trial activity."
+          },
+          "assumptions": [
+            "recent means start year 2021 or later"
+          ]
+        }
+      ],
+      "executed_plan": {
+        "answerable": true,
+        "out_of_scope_reason": null,
+        "suggested_reframing": null,
+        "interpretation": "Show how obesity trials have changed over time, using trial starts as the trend axis.",
+        "search_terms": [
+          {
+            "param": "query.cond",
+            "value": "obesity",
+            "source": "query_text",
+            "rationale": "Obesity is a condition/indication, so condition search is the broadest and most appropriate match."
+          }
+        ],
+        "filters": {
+          "phases": null,
+          "overall_statuses": null,
+          "study_types": null,
+          "intervention_types": null,
+          "lead_sponsor_classes": null,
+          "countries": null,
+          "start_year_min": 2021,
+          "start_year_max": null,
+          "nct_ids": null
+        },
+        "comparison": null,
+        "analysis": {
+          "kind": "time_trend",
+          "group_by": null,
+          "series_by": null,
+          "phase_mode": null,
+          "time_field": "start_date",
+          "granularity": "year",
+          "measure_x": null,
+          "measure_y": null,
+          "color_by": null,
+          "network_type": null,
+          "top_n": null
+        },
+        "visualization": {
+          "type": "time_series",
+          "title": "Recent Trends in Obesity Trials",
+          "rationale": "A time series is the right view for showing year-by-year changes in trial activity."
+        },
+        "assumptions": [
+          "recent means start year 2021 or later"
+        ]
+      },
+      "payload": {
+        "ok": true,
+        "error": null,
+        "meta": {
+          "plan": {
+            "answerable": true,
+            "out_of_scope_reason": null,
+            "suggested_reframing": null,
+            "interpretation": "Show how obesity trials have changed over time, using trial starts as the trend axis.",
+            "search_terms": [
+              {
+                "param": "query.cond",
+                "value": "obesity",
+                "source": "query_text",
+                "rationale": "Obesity is a condition/indication, so condition search is the broadest and most appropriate match."
+              }
+            ],
+            "filters": {
+              "phases": null,
+              "overall_statuses": null,
+              "study_types": null,
+              "intervention_types": null,
+              "lead_sponsor_classes": null,
+              "countries": null,
+              "start_year_min": 2021,
+              "start_year_max": null,
+              "nct_ids": null
+            },
+            "comparison": null,
+            "analysis": {
+              "kind": "time_trend",
+              "group_by": null,
+              "series_by": null,
+              "phase_mode": null,
+              "time_field": "start_date",
+              "granularity": "year",
+              "measure_x": null,
+              "measure_y": null,
+              "color_by": null,
+              "network_type": null,
+              "top_n": null
+            },
+            "visualization": {
+              "type": "time_series",
+              "title": "Recent Trends in Obesity Trials",
+              "rationale": "A time series is the right view for showing year-by-year changes in trial activity."
+            },
+            "assumptions": [
+              "recent means start year 2021 or later"
+            ]
+          },
+          "validation": {
+            "executed_attempt": 1,
+            "probe": [
+              {
+                "cohort": "obesity",
+                "total": 5482
+              }
+            ],
+            "judge": {
+              "status": "passed",
+              "model": "google/gemini-2.5-flash-lite",
+              "same_family": false,
+              "issues": []
+            },
+            "trace": [
+              {
+                "attempt": 1,
+                "step": "plan",
+                "answerable": true,
+                "overrides": 0
+              },
+              {
+                "attempt": 1,
+                "step": "checks",
+                "ok": true,
+                "errors": [],
+                "adjustments": []
+              },
+              {
+                "attempt": 1,
+                "step": "probe",
+                "verdict": "ok",
+                "totals": {
+                  "obesity": 5482
+                },
+                "feedback": [],
+                "warnings": []
+              },
+              {
+                "attempt": 1,
+                "step": "judge",
+                "model": "google/gemini-2.5-flash-lite",
+                "available": true,
+                "needs_revision": false,
+                "model_verdict": "pass",
+                "confidence": "high",
+                "failed_checks": [],
+                "issues": [],
+                "discarded_structured_slot_issues": 0
+              },
+              {
+                "step": "outcome",
+                "status": "passed",
+                "executed_attempt": 1
+              }
+            ]
+          },
+          "citation_check": {
+            "passed": true
+          }
+        }
+      },
+      "usages": [
+        {
+          "role": "planner",
+          "input_tokens": 3323,
+          "output_tokens": 356,
+          "cached_tokens": 2816,
+          "model": null
+        },
+        {
+          "role": "judge",
+          "input_tokens": 2045,
+          "output_tokens": 428,
+          "cached_tokens": 0,
+          "model": "google/gemini-2.5-flash-lite"
+        }
+      ],
+      "judge_calls": 1,
+      "latency_s": 10.115841916005593
+    },
+    {
+      "id": "out_of_scope_best_drug",
+      "http_status": 200,
+      "raw_plans": [
+        {
+          "answerable": false,
+          "out_of_scope_reason": "This asks for an efficacy ranking (“best”) of cancer drugs. The API does not provide outcomes or comparative effectiveness data, so it cannot determine the best drug.",
+          "suggested_reframing": "If you want, I can help compare clinical trials for a specific cancer type, drug, or sponsor, or list trials studying a particular cancer drug.",
+          "interpretation": "The question is asking for the single best cancer drug overall, which would require comparative efficacy evidence across cancers and settings.",
+          "search_terms": [],
+          "filters": null,
+          "comparison": null,
+          "analysis": null,
+          "visualization": null,
+          "assumptions": []
+        }
+      ],
+      "executed_plan": null,
+      "payload": {
+        "ok": false,
+        "error": {
+          "code": "OUT_OF_SCOPE",
+          "message": "This asks for an efficacy ranking (“best”) of cancer drugs. The API does not provide outcomes or comparative effectiveness data, so it cannot determine the best drug.",
+          "details": {
+            "suggested_reframing": "If you want, I can help compare clinical trials for a specific cancer type, drug, or sponsor, or list trials studying a particular cancer drug."
+          }
+        },
+        "meta": null
+      },
+      "usages": [
+        {
+          "role": "planner",
+          "input_tokens": 3321,
+          "output_tokens": 153,
+          "cached_tokens": 2816,
+          "model": null
+        }
+      ],
+      "judge_calls": 0,
+      "latency_s": 2.2490321249933913
+    },
+    {
+      "id": "row19_drugs_co_occur_verbatim",
+      "http_status": 200,
+      "raw_plans": [
+        {
+          "answerable": true,
+          "out_of_scope_reason": null,
+          "suggested_reframing": null,
+          "interpretation": "Identify pairs of drugs that are listed together in the same trial arm across combination studies, and show the most frequent co-occurring drug pairs as a network.",
+          "search_terms": [],
+          "filters": {
+            "phases": null,
+            "overall_statuses": null,
+            "study_types": [
+              "INTERVENTIONAL"
+            ],
+            "intervention_types": [
+              "DRUG"
+            ],
+            "lead_sponsor_classes": null,
+            "countries": null,
+            "start_year_min": null,
+            "start_year_max": null,
+            "nct_ids": null
+          },
+          "comparison": null,
+          "analysis": {
+            "kind": "network",
+            "group_by": null,
+            "series_by": null,
+            "phase_mode": null,
+            "time_field": null,
+            "granularity": null,
+            "measure_x": null,
+            "measure_y": null,
+            "color_by": null,
+            "network_type": "drug_drug",
+            "top_n": null
+          },
+          "visualization": {
+            "type": "network_graph",
+            "title": "Drug co-occurrence network in combination studies",
+            "rationale": "A network graph best shows which drugs are connected by appearing together in the same combination studies and highlights frequent pairings by edge weight."
+          },
+          "assumptions": [
+            "I’m treating 'combination studies' as interventional studies with drug interventions that include multiple drugs in the same arm."
+          ]
+        },
+        {
+          "answerable": true,
+          "out_of_scope_reason": null,
+          "suggested_reframing": null,
+          "interpretation": "Identify pairs of drugs that are listed together in the same trial arm across combination studies, and show the most frequent co-occurring drug pairs as a network.",
+          "search_terms": [],
+          "filters": {
+            "phases": null,
+            "overall_statuses": null,
+            "study_types": [
+              "INTERVENTIONAL"
+            ],
+            "intervention_types": [
+              "DRUG"
+            ],
+            "lead_sponsor_classes": null,
+            "countries": null,
+            "start_year_min": null,
+            "start_year_max": null,
+            "nct_ids": null
+          },
+          "comparison": null,
+          "analysis": {
+            "kind": "network",
+            "group_by": null,
+            "series_by": null,
+            "phase_mode": null,
+            "time_field": null,
+            "granularity": null,
+            "measure_x": null,
+            "measure_y": null,
+            "color_by": null,
+            "network_type": "drug_drug",
+            "top_n": null
+          },
+          "visualization": {
+            "type": "network_graph",
+            "title": "Drug co-occurrence network in combination studies",
+            "rationale": "A network graph best shows which drugs are connected by appearing together in the same combination studies and highlights frequent pairings by edge weight."
+          },
+          "assumptions": [
+            "I’m treating 'combination studies' as interventional studies with drug interventions that include multiple drugs in the same arm.",
+            "Because the eligible set exceeds the record cap, the analysis will use the most recent eligible trials by start date."
+          ]
+        }
+      ],
+      "executed_plan": {
+        "answerable": true,
+        "out_of_scope_reason": null,
+        "suggested_reframing": null,
+        "interpretation": "Identify pairs of drugs that are listed together in the same trial arm across combination studies, and show the most frequent co-occurring drug pairs as a network.",
+        "search_terms": [],
+        "filters": {
+          "phases": null,
+          "overall_statuses": null,
+          "study_types": [
+            "INTERVENTIONAL"
+          ],
+          "intervention_types": [
+            "DRUG"
+          ],
+          "lead_sponsor_classes": null,
+          "countries": null,
+          "start_year_min": null,
+          "start_year_max": null,
+          "nct_ids": null
+        },
+        "comparison": null,
+        "analysis": {
+          "kind": "network",
+          "group_by": null,
+          "series_by": null,
+          "phase_mode": null,
+          "time_field": null,
+          "granularity": null,
+          "measure_x": null,
+          "measure_y": null,
+          "color_by": null,
+          "network_type": "drug_drug",
+          "top_n": null
+        },
+        "visualization": {
+          "type": "network_graph",
+          "title": "Drug co-occurrence network in combination studies",
+          "rationale": "A network graph best shows which drugs are connected by appearing together in the same combination studies and highlights frequent pairings by edge weight."
+        },
+        "assumptions": [
+          "I’m treating 'combination studies' as interventional studies with drug interventions that include multiple drugs in the same arm.",
+          "Because the eligible set exceeds the record cap, the analysis will use the most recent eligible trials by start date."
+        ]
+      },
+      "payload": {
+        "ok": true,
+        "error": null,
+        "meta": {
+          "plan": {
+            "answerable": true,
+            "out_of_scope_reason": null,
+            "suggested_reframing": null,
+            "interpretation": "Identify pairs of drugs that are listed together in the same trial arm across combination studies, and show the most frequent co-occurring drug pairs as a network.",
+            "search_terms": [],
+            "filters": {
+              "phases": null,
+              "overall_statuses": null,
+              "study_types": [
+                "INTERVENTIONAL"
+              ],
+              "intervention_types": [
+                "DRUG"
+              ],
+              "lead_sponsor_classes": null,
+              "countries": null,
+              "start_year_min": null,
+              "start_year_max": null,
+              "nct_ids": null
+            },
+            "comparison": null,
+            "analysis": {
+              "kind": "network",
+              "group_by": null,
+              "series_by": null,
+              "phase_mode": null,
+              "time_field": null,
+              "granularity": null,
+              "measure_x": null,
+              "measure_y": null,
+              "color_by": null,
+              "network_type": "drug_drug",
+              "top_n": null
+            },
+            "visualization": {
+              "type": "network_graph",
+              "title": "Drug co-occurrence network in combination studies",
+              "rationale": "A network graph best shows which drugs are connected by appearing together in the same combination studies and highlights frequent pairings by edge weight."
+            },
+            "assumptions": [
+              "I’m treating 'combination studies' as interventional studies with drug interventions that include multiple drugs in the same arm.",
+              "Because the eligible set exceeds the record cap, the analysis will use the most recent eligible trials by start date."
+            ]
+          },
+          "validation": {
+            "executed_attempt": 2,
+            "probe": [
+              {
+                "cohort": "All trials",
+                "total": 201436
+              }
+            ],
+            "judge": {
+              "status": "passed_after_revision",
+              "model": "google/gemini-2.5-flash-lite",
+              "same_family": false,
+              "issues": []
+            },
+            "trace": [
+              {
+                "attempt": 1,
+                "step": "plan",
+                "answerable": true,
+                "overrides": 0
+              },
+              {
+                "attempt": 1,
+                "step": "checks",
+                "ok": true,
+                "errors": [],
+                "adjustments": []
+              },
+              {
+                "attempt": 1,
+                "step": "probe",
+                "verdict": "revise",
+                "totals": {
+                  "All trials": 201436
+                },
+                "feedback": [
+                  "201,436 trials for filters.study_types=['INTERVENTIONAL'], filters.intervention_types=['DRUG'] exceed the 20,000-record cap; if the question implies a narrower scope (phase, status, years, country), add that filter, otherwise keep the plan (the most recent 20,000 by start date will be analyzed)."
+                ],
+                "warnings": []
+              },
+              {
+                "attempt": 2,
+                "step": "plan",
+                "answerable": true,
+                "overrides": 0
+              },
+              {
+                "attempt": 2,
+                "step": "checks",
+                "ok": true,
+                "errors": [],
+                "adjustments": []
+              },
+              {
+                "attempt": 2,
+                "step": "probe",
+                "verdict": "too_broad_accept",
+                "totals": {
+                  "All trials": 201436
+                },
+                "feedback": [],
+                "warnings": []
+              },
+              {
+                "attempt": 2,
+                "step": "judge",
+                "model": "google/gemini-2.5-flash-lite",
+                "available": true,
+                "needs_revision": false,
+                "model_verdict": "pass",
+                "confidence": "high",
+                "failed_checks": [],
+                "issues": [],
+                "discarded_structured_slot_issues": 0
+              },
+              {
+                "step": "outcome",
+                "status": "passed_after_revision",
+                "executed_attempt": 2
+              }
+            ]
+          },
+          "citation_check": {
+            "passed": true
+          }
+        }
+      },
+      "usages": [
+        {
+          "role": "planner",
+          "input_tokens": 3325,
+          "output_tokens": 463,
+          "cached_tokens": 2816,
+          "model": null
+        },
+        {
+          "role": "planner",
+          "input_tokens": 3598,
+          "output_tokens": 575,
+          "cached_tokens": 2816,
+          "model": null
+        },
+        {
+          "role": "judge",
+          "input_tokens": 2062,
+          "output_tokens": 487,
+          "cached_tokens": 0,
+          "model": "google/gemini-2.5-flash-lite"
+        }
+      ],
+      "judge_calls": 1,
+      "latency_s": 32.774696165986825
+    },
+    {
+      "id": "judge_revise_involving_sponsor",
+      "http_status": 200,
+      "raw_plans": [
+        {
+          "answerable": true,
+          "out_of_scope_reason": null,
+          "suggested_reframing": null,
+          "interpretation": "Show how clinical trials involving Novartis are distributed across trial phases.",
+          "search_terms": [
+            {
+              "param": "query.spons",
+              "value": "Novartis",
+              "source": "query_text",
+              "rationale": "The question asks for trials involving Novartis, so include trials where Novartis is the lead sponsor or a collaborator."
+            }
+          ],
+          "filters": null,
+          "comparison": null,
+          "analysis": {
+            "kind": "count_by",
+            "group_by": "phase",
+            "series_by": null,
+            "phase_mode": "combined",
+            "time_field": null,
+            "granularity": null,
+            "measure_x": null,
+            "measure_y": null,
+            "color_by": null,
+            "network_type": null,
+            "top_n": null
+          },
+          "visualization": {
+            "type": "bar_chart",
+            "title": "Trials involving Novartis by phase",
+            "rationale": "A bar chart is the clearest way to compare trial counts across categorical phases."
+          },
+          "assumptions": [
+            "'Novartis' is interpreted broadly as any organization whose name contains Novartis, including lead sponsors and collaborators."
+          ]
+        }
+      ],
+      "executed_plan": {
+        "answerable": true,
+        "out_of_scope_reason": null,
+        "suggested_reframing": null,
+        "interpretation": "Show how clinical trials involving Novartis are distributed across trial phases.",
+        "search_terms": [
+          {
+            "param": "query.spons",
+            "value": "Novartis",
+            "source": "query_text",
+            "rationale": "The question asks for trials involving Novartis, so include trials where Novartis is the lead sponsor or a collaborator."
+          }
+        ],
+        "filters": null,
+        "comparison": null,
+        "analysis": {
+          "kind": "count_by",
+          "group_by": "phase",
+          "series_by": null,
+          "phase_mode": "combined",
+          "time_field": null,
+          "granularity": null,
+          "measure_x": null,
+          "measure_y": null,
+          "color_by": null,
+          "network_type": null,
+          "top_n": null
+        },
+        "visualization": {
+          "type": "bar_chart",
+          "title": "Trials involving Novartis by phase",
+          "rationale": "A bar chart is the clearest way to compare trial counts across categorical phases."
+        },
+        "assumptions": [
+          "'Novartis' is interpreted broadly as any organization whose name contains Novartis, including lead sponsors and collaborators."
+        ]
+      },
+      "payload": {
+        "ok": true,
+        "error": null,
+        "meta": {
+          "plan": {
+            "answerable": true,
+            "out_of_scope_reason": null,
+            "suggested_reframing": null,
+            "interpretation": "Show how clinical trials involving Novartis are distributed across trial phases.",
+            "search_terms": [
+              {
+                "param": "query.spons",
+                "value": "Novartis",
+                "source": "query_text",
+                "rationale": "The question asks for trials involving Novartis, so include trials where Novartis is the lead sponsor or a collaborator."
+              }
+            ],
+            "filters": null,
+            "comparison": null,
+            "analysis": {
+              "kind": "count_by",
+              "group_by": "phase",
+              "series_by": null,
+              "phase_mode": "combined",
+              "time_field": null,
+              "granularity": null,
+              "measure_x": null,
+              "measure_y": null,
+              "color_by": null,
+              "network_type": null,
+              "top_n": null
+            },
+            "visualization": {
+              "type": "bar_chart",
+              "title": "Trials involving Novartis by phase",
+              "rationale": "A bar chart is the clearest way to compare trial counts across categorical phases."
+            },
+            "assumptions": [
+              "'Novartis' is interpreted broadly as any organization whose name contains Novartis, including lead sponsors and collaborators."
+            ]
+          },
+          "validation": {
+            "executed_attempt": 1,
+            "probe": [
+              {
+                "cohort": "Novartis",
+                "total": 5093
+              }
+            ],
+            "judge": {
+              "status": "passed",
+              "model": "google/gemini-2.5-flash-lite",
+              "same_family": false,
+              "issues": []
+            },
+            "trace": [
+              {
+                "attempt": 1,
+                "step": "plan",
+                "answerable": true,
+                "overrides": 0
+              },
+              {
+                "attempt": 1,
+                "step": "checks",
+                "ok": true,
+                "errors": [],
+                "adjustments": []
+              },
+              {
+                "attempt": 1,
+                "step": "probe",
+                "verdict": "ok",
+                "totals": {
+                  "Novartis": 5093
+                },
+                "feedback": [],
+                "warnings": []
+              },
+              {
+                "attempt": 1,
+                "step": "judge",
+                "model": "google/gemini-2.5-flash-lite",
+                "available": true,
+                "needs_revision": false,
+                "model_verdict": "pass",
+                "confidence": "high",
+                "failed_checks": [],
+                "issues": [],
+                "discarded_structured_slot_issues": 0
+              },
+              {
+                "step": "outcome",
+                "status": "passed",
+                "executed_attempt": 1
+              }
+            ]
+          },
+          "citation_check": {
+            "passed": true
+          }
+        }
+      },
+      "usages": [
+        {
+          "role": "planner",
+          "input_tokens": 3326,
+          "output_tokens": 290,
+          "cached_tokens": 2816,
+          "model": null
+        },
+        {
+          "role": "judge",
+          "input_tokens": 1958,
+          "output_tokens": 432,
+          "cached_tokens": 0,
+          "model": "google/gemini-2.5-flash-lite"
+        }
+      ],
+      "judge_calls": 1,
+      "latency_s": 9.814479333988857
+    },
+    {
+      "id": "held_out_recency_lately",
+      "http_status": 200,
+      "raw_plans": [
+        {
+          "answerable": true,
+          "out_of_scope_reason": null,
+          "suggested_reframing": null,
+          "interpretation": "Assess whether Parkinson's disease trial activity has increased in recent years by looking at the number of trials started each year.",
+          "search_terms": [
+            {
+              "param": "query.cond",
+              "value": "Parkinson's disease",
+              "source": "query_text",
+              "rationale": "Condition-specific search for Parkinson's disease trials."
+            }
+          ],
+          "filters": {
+            "phases": null,
+            "overall_statuses": null,
+            "study_types": null,
+            "intervention_types": null,
+            "lead_sponsor_classes": null,
+            "countries": null,
+            "start_year_min": 2021,
+            "start_year_max": null,
+            "nct_ids": null
+          },
+          "comparison": null,
+          "analysis": {
+            "kind": "time_trend",
+            "group_by": null,
+            "series_by": null,
+            "phase_mode": null,
+            "time_field": "start_date",
+            "granularity": "year",
+            "measure_x": null,
+            "measure_y": null,
+            "color_by": null,
+            "network_type": null,
+            "top_n": null
+          },
+          "visualization": {
+            "type": "time_series",
+            "title": "Parkinson's disease trials started by year",
+            "rationale": "A time series is the best way to see whether trial activity has picked up over time."
+          },
+          "assumptions": [
+            "Interpreting 'lately' as trials starting in 2021 or later."
+          ]
+        }
+      ],
+      "executed_plan": {
+        "answerable": true,
+        "out_of_scope_reason": null,
+        "suggested_reframing": null,
+        "interpretation": "Assess whether Parkinson's disease trial activity has increased in recent years by looking at the number of trials started each year.",
+        "search_terms": [
+          {
+            "param": "query.cond",
+            "value": "Parkinson's disease",
+            "source": "query_text",
+            "rationale": "Condition-specific search for Parkinson's disease trials."
+          }
+        ],
+        "filters": {
+          "phases": null,
+          "overall_statuses": null,
+          "study_types": null,
+          "intervention_types": null,
+          "lead_sponsor_classes": null,
+          "countries": null,
+          "start_year_min": 2021,
+          "start_year_max": null,
+          "nct_ids": null
+        },
+        "comparison": null,
+        "analysis": {
+          "kind": "time_trend",
+          "group_by": null,
+          "series_by": null,
+          "phase_mode": null,
+          "time_field": "start_date",
+          "granularity": "year",
+          "measure_x": null,
+          "measure_y": null,
+          "color_by": null,
+          "network_type": null,
+          "top_n": null
+        },
+        "visualization": {
+          "type": "time_series",
+          "title": "Parkinson's disease trials started by year",
+          "rationale": "A time series is the best way to see whether trial activity has picked up over time."
+        },
+        "assumptions": [
+          "Interpreting 'lately' as trials starting in 2021 or later."
+        ]
+      },
+      "payload": {
+        "ok": true,
+        "error": null,
+        "meta": {
+          "plan": {
+            "answerable": true,
+            "out_of_scope_reason": null,
+            "suggested_reframing": null,
+            "interpretation": "Assess whether Parkinson's disease trial activity has increased in recent years by looking at the number of trials started each year.",
+            "search_terms": [
+              {
+                "param": "query.cond",
+                "value": "Parkinson's disease",
+                "source": "query_text",
+                "rationale": "Condition-specific search for Parkinson's disease trials."
+              }
+            ],
+            "filters": {
+              "phases": null,
+              "overall_statuses": null,
+              "study_types": null,
+              "intervention_types": null,
+              "lead_sponsor_classes": null,
+              "countries": null,
+              "start_year_min": 2021,
+              "start_year_max": null,
+              "nct_ids": null
+            },
+            "comparison": null,
+            "analysis": {
+              "kind": "time_trend",
+              "group_by": null,
+              "series_by": null,
+              "phase_mode": null,
+              "time_field": "start_date",
+              "granularity": "year",
+              "measure_x": null,
+              "measure_y": null,
+              "color_by": null,
+              "network_type": null,
+              "top_n": null
+            },
+            "visualization": {
+              "type": "time_series",
+              "title": "Parkinson's disease trials started by year",
+              "rationale": "A time series is the best way to see whether trial activity has picked up over time."
+            },
+            "assumptions": [
+              "Interpreting 'lately' as trials starting in 2021 or later."
+            ]
+          },
+          "validation": {
+            "executed_attempt": 1,
+            "probe": [
+              {
+                "cohort": "Parkinson's disease",
+                "total": 1570
+              }
+            ],
+            "judge": {
+              "status": "passed",
+              "model": "google/gemini-2.5-flash-lite",
+              "same_family": false,
+              "issues": []
+            },
+            "trace": [
+              {
+                "attempt": 1,
+                "step": "plan",
+                "answerable": true,
+                "overrides": 0
+              },
+              {
+                "attempt": 1,
+                "step": "checks",
+                "ok": true,
+                "errors": [],
+                "adjustments": []
+              },
+              {
+                "attempt": 1,
+                "step": "probe",
+                "verdict": "ok",
+                "totals": {
+                  "Parkinson's disease": 1570
+                },
+                "feedback": [],
+                "warnings": []
+              },
+              {
+                "attempt": 1,
+                "step": "judge",
+                "model": "google/gemini-2.5-flash-lite",
+                "available": true,
+                "needs_revision": false,
+                "model_verdict": "pass",
+                "confidence": "high",
+                "failed_checks": [],
+                "issues": [],
+                "discarded_structured_slot_issues": 0
+              },
+              {
+                "step": "outcome",
+                "status": "passed",
+                "executed_attempt": 1
+              }
+            ]
+          },
+          "citation_check": {
+            "passed": true
+          }
+        }
+      },
+      "usages": [
+        {
+          "role": "planner",
+          "input_tokens": 3324,
+          "output_tokens": 359,
+          "cached_tokens": 2816,
+          "model": null
+        },
+        {
+          "role": "judge",
+          "input_tokens": 2063,
+          "output_tokens": 468,
+          "cached_tokens": 0,
+          "model": "google/gemini-2.5-flash-lite"
+        }
+      ],
+      "judge_calls": 1,
+      "latency_s": 5.870875791995786
+    },
+    {
+      "id": "held_out_sponsor_variants_roche",
+      "http_status": 200,
+      "raw_plans": [
+        {
+          "answerable": true,
+          "out_of_scope_reason": null,
+          "suggested_reframing": null,
+          "interpretation": "Distribution of Roche-sponsored trials by clinical phase, using lead sponsor matching Roche.",
+          "search_terms": [
+            {
+              "param": "query.lead",
+              "value": "Roche",
+              "source": "query_text",
+              "rationale": "The question asks about Roche's trials, which is best interpreted as trials led by Roche as sponsor."
+            }
+          ],
+          "filters": null,
+          "comparison": null,
+          "analysis": {
+            "kind": "count_by",
+            "group_by": "phase",
+            "series_by": null,
+            "phase_mode": null,
+            "time_field": null,
+            "granularity": null,
+            "measure_x": null,
+            "measure_y": null,
+            "color_by": null,
+            "network_type": null,
+            "top_n": null
+          },
+          "visualization": {
+            "type": "bar_chart",
+            "title": "Roche trials by phase",
+            "rationale": "A bar chart is appropriate for counting trials across categorical phase buckets."
+          },
+          "assumptions": [
+            "Interpret Roche as lead sponsors whose organization name contains Roche, including F. Hoffmann-La Roche and other Roche-named lead sponsors."
+          ]
+        }
+      ],
+      "executed_plan": {
+        "answerable": true,
+        "out_of_scope_reason": null,
+        "suggested_reframing": null,
+        "interpretation": "Distribution of Roche-sponsored trials by clinical phase, using lead sponsor matching Roche.",
+        "search_terms": [
+          {
+            "param": "query.lead",
+            "value": "Roche",
+            "source": "query_text",
+            "rationale": "The question asks about Roche's trials, which is best interpreted as trials led by Roche as sponsor."
+          }
+        ],
+        "filters": null,
+        "comparison": null,
+        "analysis": {
+          "kind": "count_by",
+          "group_by": "phase",
+          "series_by": null,
+          "phase_mode": null,
+          "time_field": null,
+          "granularity": null,
+          "measure_x": null,
+          "measure_y": null,
+          "color_by": null,
+          "network_type": null,
+          "top_n": null
+        },
+        "visualization": {
+          "type": "bar_chart",
+          "title": "Roche trials by phase",
+          "rationale": "A bar chart is appropriate for counting trials across categorical phase buckets."
+        },
+        "assumptions": [
+          "Interpret Roche as lead sponsors whose organization name contains Roche, including F. Hoffmann-La Roche and other Roche-named lead sponsors."
+        ]
+      },
+      "payload": {
+        "ok": true,
+        "error": null,
+        "meta": {
+          "plan": {
+            "answerable": true,
+            "out_of_scope_reason": null,
+            "suggested_reframing": null,
+            "interpretation": "Distribution of Roche-sponsored trials by clinical phase, using lead sponsor matching Roche.",
+            "search_terms": [
+              {
+                "param": "query.lead",
+                "value": "Roche",
+                "source": "query_text",
+                "rationale": "The question asks about Roche's trials, which is best interpreted as trials led by Roche as sponsor."
+              }
+            ],
+            "filters": null,
+            "comparison": null,
+            "analysis": {
+              "kind": "count_by",
+              "group_by": "phase",
+              "series_by": null,
+              "phase_mode": null,
+              "time_field": null,
+              "granularity": null,
+              "measure_x": null,
+              "measure_y": null,
+              "color_by": null,
+              "network_type": null,
+              "top_n": null
+            },
+            "visualization": {
+              "type": "bar_chart",
+              "title": "Roche trials by phase",
+              "rationale": "A bar chart is appropriate for counting trials across categorical phase buckets."
+            },
+            "assumptions": [
+              "Interpret Roche as lead sponsors whose organization name contains Roche, including F. Hoffmann-La Roche and other Roche-named lead sponsors."
+            ]
+          },
+          "validation": {
+            "executed_attempt": 1,
+            "probe": [
+              {
+                "cohort": "Roche",
+                "total": 2104
+              }
+            ],
+            "judge": {
+              "status": "passed",
+              "model": "google/gemini-2.5-flash-lite",
+              "same_family": false,
+              "issues": []
+            },
+            "trace": [
+              {
+                "attempt": 1,
+                "step": "plan",
+                "answerable": true,
+                "overrides": 0
+              },
+              {
+                "attempt": 1,
+                "step": "checks",
+                "ok": true,
+                "errors": [],
+                "adjustments": []
+              },
+              {
+                "attempt": 1,
+                "step": "probe",
+                "verdict": "ok",
+                "totals": {
+                  "Roche": 2104
+                },
+                "feedback": [],
+                "warnings": []
+              },
+              {
+                "attempt": 1,
+                "step": "judge",
+                "model": "google/gemini-2.5-flash-lite",
+                "available": true,
+                "needs_revision": false,
+                "model_verdict": "pass",
+                "confidence": "high",
+                "failed_checks": [],
+                "issues": [],
+                "discarded_structured_slot_issues": 0
+              },
+              {
+                "step": "outcome",
+                "status": "passed",
+                "executed_attempt": 1
+              }
+            ]
+          },
+          "citation_check": {
+            "passed": true
+          }
+        }
+      },
+      "usages": [
+        {
+          "role": "planner",
+          "input_tokens": 3324,
+          "output_tokens": 325,
+          "cached_tokens": 2816,
+          "model": null
+        },
+        {
+          "role": "judge",
+          "input_tokens": 1962,
+          "output_tokens": 431,
+          "cached_tokens": 0,
+          "model": "google/gemini-2.5-flash-lite"
+        }
+      ],
+      "judge_calls": 1,
+      "latency_s": 7.856488041987177
+    }
+  ],
+  "judge": [
+    {
+      "id": "drug_searched_as_condition",
+      "category": "filter_fidelity",
+      "label": "bad",
+      "available": true,
+      "flagged": false,
+      "failed_checks": [
+        "filter_fidelity"
+      ],
+      "issues": [],
+      "cost_usd": 0.00046469999999999997,
+      "model": "google/gemini-2.5-flash-lite"
+    },
+    {
+      "id": "invented_status_and_country",
+      "category": "no_invented_filters",
+      "label": "bad",
+      "available": true,
+      "flagged": true,
+      "failed_checks": [
+        "no_invented_filters"
+      ],
+      "issues": [
+        "[major] filters.countries: The plan incorrectly filters trials to only include those in the United States, which was not specified in the user's question.",
+        "[major] filters.overall_statuses: The plan incorrectly filters trials to only include those that are currently recruiting, which was not specified in the user's question."
+      ],
+      "cost_usd": 0.00046970000000000003,
+      "model": "google/gemini-2.5-flash-lite"
+    },
+    {
+      "id": "countries_asked_phase_grouped",
+      "category": "dimension_match",
+      "label": "bad",
+      "available": true,
+      "flagged": true,
+      "failed_checks": [
+        "dimension_match",
+        "viz_fit"
+      ],
+      "issues": [
+        "[critical] analysis.group_by: The user asked to group trials by country, but the plan is grouping by phase.",
+        "[major] visualization.type: The user is asking for a ranking of countries, which is best represented by a bar chart showing countries and their trial counts, not by phase.",
+        "[major] visualization.title: The visualization title should reflect the question asked, which is about countries, not phases."
+      ],
+      "cost_usd": 0.0004711,
+      "model": "google/gemini-2.5-flash-lite"
+    },
+    {
+      "id": "relationships_as_bar_chart",
+      "category": "viz_fit",
+      "label": "bad",
+      "available": true,
+      "flagged": true,
+      "failed_checks": [
+        "filter_fidelity",
+        "dimension_match",
+        "viz_fit"
+      ],
+      "issues": [
+        "[critical] search_terms: The question asks to show connections between sponsors and drugs, but the plan only includes a filter for the condition 'glioblastoma' and does not include any filters for sponsors or drugs. To answer the question, filters for both sponsors and drugs are needed.",
+        "[critical] analysis.kind: The question asks to show how sponsors are connected to drugs, which implies a network analysis. The plan uses a 'count_by' analysis, which counts occurrences but does not show relationships between entities. A network analysis is required to visualize these connections.",
+        "[critical] visualization.type: The question asks to visualize the connections between sponsors and drugs. A bar chart is not suitable for this purpose. A network visualization is appropriate for showing relationships between entities."
+      ],
+      "cost_usd": 0.0005359000000000001,
+      "model": "google/gemini-2.5-flash-lite"
+    },
+    {
+      "id": "since_2015_as_2005",
+      "category": "time_range",
+      "label": "bad",
+      "available": true,
+      "flagged": true,
+      "failed_checks": [
+        "time_range"
+      ],
+      "issues": [
+        "[major] filters.start_year_min: The user specified a start year of 2015, but the plan incorrectly set the minimum start year to 2005."
+      ],
+      "cost_usd": 0.00043520000000000006,
+      "model": "google/gemini-2.5-flash-lite"
+    },
+    {
+      "id": "vs_nivolumab_compared_to_ipilimumab",
+      "category": "comparison_cohorts",
+      "label": "bad",
+      "available": true,
+      "flagged": true,
+      "failed_checks": [
+        "comparison_cohorts"
+      ],
+      "issues": [
+        "[critical] comparison.values: The user asked to compare pembrolizumab vs nivolumab, but the plan is set up to compare pembrolizumab vs ipilimumab."
+      ],
+      "cost_usd": 0.0004123,
+      "model": "google/gemini-2.5-flash-lite"
+    },
+    {
+      "id": "georgia_resolved_silently",
+      "category": "ambiguity_handled",
+      "label": "bad",
+      "available": true,
+      "flagged": false,
+      "failed_checks": [],
+      "issues": [],
+      "cost_usd": 0.00035140000000000003,
+      "model": "google/gemini-2.5-flash-lite"
+    },
+    {
+      "id": "structured_start_year_overrides_question",
+      "category": "structured_override",
+      "label": "good",
+      "available": true,
+      "flagged": false,
+      "failed_checks": [
+        "time_range"
+      ],
+      "issues": [],
+      "cost_usd": 0.0004376,
+      "model": "google/gemini-2.5-flash-lite"
+    },
+    {
+      "id": "clean_trend",
+      "category": "clean",
+      "label": "good",
+      "available": true,
+      "flagged": false,
+      "failed_checks": [],
+      "issues": [],
+      "cost_usd": 0.00037320000000000007,
+      "model": "google/gemini-2.5-flash-lite"
+    },
+    {
+      "id": "clean_comparison",
+      "category": "clean",
+      "label": "good",
+      "available": true,
+      "flagged": false,
+      "failed_checks": [],
+      "issues": [],
+      "cost_usd": 0.00033580000000000003,
+      "model": "google/gemini-2.5-flash-lite"
+    },
+    {
+      "id": "held_out_washington_silent",
+      "category": "ambiguity_handled",
+      "label": "bad",
+      "available": true,
+      "flagged": true,
+      "failed_checks": [
+        "comparison_cohorts"
+      ],
+      "issues": [
+        "[critical] analysis.group_by: The question asks for a comparison between 'recruiting' and 'completed' trials, implying these should be separate cohorts for comparison. However, the plan uses 'overall_status' as a grouping dimension, which will count all statuses including 'recruiting' and 'completed' but not directly compare them as requested."
+      ],
+      "cost_usd": 0.0004044,
+      "model": "google/gemini-2.5-flash-lite"
+    },
+    {
+      "id": "held_out_washington_stated",
+      "category": "ambiguity_handled",
+      "label": "good",
+      "available": true,
+      "flagged": true,
+      "failed_checks": [
+        "ambiguity_handled"
+      ],
+      "issues": [
+        "[major] assumptions[0]: The question asks about 'Washington' without specifying if it refers to Washington State or Washington D.C. The plan assumes both are included, but this ambiguity should be explicitly stated as a potential issue or resolved by asking the user for clarification."
+      ],
+      "cost_usd": 0.0004379,
+      "model": "google/gemini-2.5-flash-lite"
+    }
+  ]
+}

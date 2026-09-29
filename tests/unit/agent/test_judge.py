@@ -16,14 +16,18 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from ctviz.agent.judge import (
-    JUDGE_UNAVAILABLE_MESSAGE,
-    OPENROUTER_BASE_URL,
     Judge,
-    OpenRouterJudgeBackend,
     build_judge,
     model_family,
     needs_revision,
     same_family,
+)
+from ctviz.agent.judge_backends import (
+    JUDGE_UNAVAILABLE_MESSAGE,
+    OPENROUTER_BASE_URL,
+    JudgeAnswer,
+    MissingKeyJudgeBackend,
+    OpenRouterJudgeBackend,
 )
 from ctviz.agent.overlay import FieldOverride, apply_overlay
 from ctviz.agent.prompts import build_judge_system, build_judge_user
@@ -47,12 +51,17 @@ _CHECK_NAMES = (
 _REQUEST = VisualizeRequest(query="Pembrolizumab trials by phase")
 
 
-def issue(severity: str = "major", plan_path: str = "search_terms[0].param") -> JudgeIssue:
+def issue(
+    severity: str = "major",
+    plan_path: str = "search_terms[0].param",
+    quote: str = "search_terms",
+) -> JudgeIssue:
     """A `JudgeIssue` at `plan_path`."""
     return JudgeIssue(
         severity=severity,  # type: ignore[arg-type]
         category="wrong_param",
         plan_path=plan_path,
+        evidence_quote=quote,
         explanation="Pembrolizumab is a drug, not a condition.",
         suggested_fix='set search_terms[0].param = "query.intr"',
     )
@@ -77,18 +86,22 @@ def verdict(
 
 
 class ScriptedJudgeBackend:
-    """A `JudgeBackend` returning (or raising) each scripted effect in order, recording prompts."""
+    """A `JudgeBackend` returning (or raising) each scripted effect in order, recording prompts;
+    every verdict is reported as answered by `model`."""
 
-    def __init__(self, *effects: JudgeVerdict | Exception) -> None:
+    def __init__(
+        self, *effects: JudgeVerdict | Exception, model: str = "google/gemini-2.5-flash-lite"
+    ) -> None:
         self._effects = list(effects)
         self.calls: list[tuple[str, str]] = []
+        self.model = model
 
-    def complete(self, system: str, user: str, budget_s: float = 0.0) -> JudgeVerdict:
+    def complete(self, system: str, user: str, budget_s: float = 0.0) -> JudgeAnswer:
         self.calls.append((system, user))
         effect = self._effects.pop(0)
         if isinstance(effect, Exception):
             raise effect
-        return effect
+        return JudgeAnswer(effect, self.model)
 
 
 def _review(judge_verdict: JudgeVerdict | Exception, plan: QueryPlan | None = None) -> Any:
@@ -389,10 +402,10 @@ def test_build_judge_without_openrouter_key_reports_unavailable_instead_of_faili
     assert review.available is False
 
 
-def test_build_judge_with_a_key_uses_the_openrouter_backend() -> None:
-    judge = build_judge(Settings(_env_file=None, openrouter_api_key="sk-or-fake-never-sent"))
+def test_build_judge_without_a_key_uses_the_fail_open_backend() -> None:
+    judge = build_judge(Settings(_env_file=None, openrouter_api_key=None))
 
-    assert isinstance(judge._backend, OpenRouterJudgeBackend)
+    assert isinstance(judge._backend, MissingKeyJudgeBackend)
 
 
 def test_openrouter_backend_refuses_to_build_without_a_key() -> None:
@@ -482,7 +495,7 @@ def test_openrouter_backend_sends_structured_output_temperature_zero_and_headers
 
     # Assert
     [call] = parse.calls
-    assert result == verdict()
+    assert result == JudgeAnswer(verdict(), "google/gemini-2.5-flash-lite")
     assert call["model"] == "google/gemini-2.5-flash-lite"
     assert call["response_format"] is JudgeVerdict
     assert call["temperature"] == 0
@@ -516,7 +529,7 @@ def test_openrouter_backend_retries_a_rate_limit_once_honoring_retry_after() -> 
     result = backend.complete("s", "u")
 
     # Assert
-    assert result == verdict()
+    assert result.verdict == verdict()
     assert len(parse.calls) == 2
     assert sleeps == [1.5]
 
@@ -580,32 +593,24 @@ def _openrouter_judge(parse: _FakeParse, clock: FakeClock) -> Judge:
     )
 
 
-def test_a_schema_invalid_output_is_retried_once_then_passes() -> None:
-    """Fix B (live: flash-lite failed schema validation 1 in 8): one retry within budget."""
+def test_a_schema_invalid_output_is_not_retried_on_the_same_tier() -> None:
+    """§9.5 ruling: a schema-invalid output goes to the next tier, never back to this one."""
     clock = FakeClock()
     parse = _FakeParse(_schema_error(), _completion(verdict()), clock=clock, call_s=1.0)
 
     review = _openrouter_judge(parse, clock).review(_REQUEST, make_plan(), [], {"p": 5})
 
-    assert (review.available, review.needs_revision) == (True, False)
-    assert len(parse.calls) == 2
-
-
-def test_a_schema_invalid_output_twice_is_unavailable() -> None:
-    clock = FakeClock()
-    parse = _FakeParse(_schema_error(), _schema_error(), clock=clock, call_s=1.0)
-
-    review = _openrouter_judge(parse, clock).review(_REQUEST, make_plan(), [], {"p": 5})
-
     assert review.available is False
-    assert len(parse.calls) == 2
+    assert len(parse.calls) == 1
 
 
-def test_no_retry_when_the_judge_budget_is_exhausted() -> None:
+def test_no_rate_limit_retry_when_the_judge_budget_is_exhausted() -> None:
     """Fix B: a first call that burns the budget (11 s of 12) is not retried -- fail open."""
     clock = FakeClock()
     slow = JUDGE_REQUEST_BUDGET_S - JUDGE_MIN_CALL_S + 1.0
-    parse = _FakeParse(_schema_error(), _completion(verdict()), clock=clock, call_s=slow)
+    parse = _FakeParse(
+        _status_error(429, {"retry-after": "0"}), _completion(verdict()), clock=clock, call_s=slow
+    )
 
     review = _openrouter_judge(parse, clock).review(_REQUEST, make_plan(), [], {"p": 5})
 
@@ -628,7 +633,8 @@ def test_a_rate_limit_wait_counts_against_the_judge_budget() -> None:
 def test_each_call_times_out_within_the_remaining_budget() -> None:
     """Fix B: per-call timeout = min(JUDGE_TIMEOUT_S, what is left of the budget)."""
     clock = FakeClock()
-    parse = _FakeParse(_schema_error(), _completion(verdict()), clock=clock, call_s=6.0)
+    first = _status_error(429, {"retry-after": "0"})
+    parse = _FakeParse(first, _completion(verdict()), clock=clock, call_s=6.0)
 
     _backend(parse, clock=clock).complete("s", "u")
 

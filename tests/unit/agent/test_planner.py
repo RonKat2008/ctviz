@@ -17,6 +17,7 @@ import pytest
 from pydantic import ValidationError
 
 from ctviz.agent.planner import (
+    CLIENT_AUTH_MESSAGE,
     CLIENT_UNAVAILABLE_MESSAGE,
     MAX_OUTPUT_TOKENS,
     RETRY_MAX_OUTPUT_TOKENS,
@@ -261,7 +262,7 @@ def test_planner_error_message_never_contains_sdk_text(caplog: Any) -> None:
         backend.complete("system", "user")
 
     message = str(exc_info.value)
-    assert message == CLIENT_UNAVAILABLE_MESSAGE
+    assert message == CLIENT_AUTH_MESSAGE
     assert "sk-" not in message
     assert key_fragment not in message
     assert key_fragment not in caplog.text

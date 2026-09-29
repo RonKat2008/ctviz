@@ -1,0 +1,150 @@
+# S9 judge evals (PLAN.md §9.6): 12 labeled (request, raw plan, probe totals) cases -- one labeled-bad
+# plan per rubric check (category = the check it should fail), the structured-field-override case
+# that MUST pass, and 2 clean plans. `plan` is the planner's RAW output (partial; omitted nullable
+# slots are null); the harness overlays structured fields exactly as the orchestrator does.
+# "Flagged" is scored from the code-recomputed decision, never the model's verdict string.
+
+- id: drug_searched_as_condition
+  category: filter_fidelity
+  label: bad
+  request: {query: "How are nivolumab trials distributed across phases?"}
+  probe_totals: {nivolumab: 41}
+  plan:
+    interpretation: Nivolumab trials by phase.
+    search_terms: [{param: query.cond, value: nivolumab}]
+    analysis: {kind: count_by, group_by: phase, phase_mode: combined}
+    visualization: {type: bar_chart, title: Nivolumab trials by phase}
+
+- id: invented_status_and_country
+  category: no_invented_filters
+  label: bad
+  request: {query: "How are breast cancer trials distributed across phases?"}
+  probe_totals: {breast cancer: 1180}
+  plan:
+    interpretation: Breast cancer trials by phase.
+    search_terms: [{param: query.cond, value: breast cancer}]
+    filters: {overall_statuses: [RECRUITING], countries: [United States]}
+    analysis: {kind: count_by, group_by: phase, phase_mode: combined}
+    visualization: {type: bar_chart, title: Breast cancer trials by phase}
+
+- id: countries_asked_phase_grouped
+  category: dimension_match
+  label: bad
+  request: {query: "Which countries have the most trials for multiple sclerosis?"}
+  probe_totals: {multiple sclerosis: 7912}
+  plan:
+    interpretation: Multiple sclerosis trials by phase.
+    search_terms: [{param: query.cond, value: multiple sclerosis}]
+    analysis: {kind: count_by, group_by: phase, phase_mode: combined}
+    visualization: {type: bar_chart, title: Multiple sclerosis trials by phase}
+
+- id: relationships_as_bar_chart
+  category: viz_fit
+  label: bad
+  request: {query: "Show how sponsors are connected to the drugs they test in glioblastoma trials"}
+  probe_totals: {glioblastoma: 2268}
+  plan:
+    interpretation: Glioblastoma trials counted by lead sponsor.
+    search_terms: [{param: query.cond, value: glioblastoma}]
+    analysis: {kind: count_by, group_by: lead_sponsor, top_n: 20}
+    visualization: {type: bar_chart, title: Glioblastoma trials by sponsor}
+
+- id: since_2015_as_2005
+  category: time_range
+  label: bad
+  request: {query: "How has the number of pembrolizumab trials changed per year since 2015?"}
+  probe_totals: {pembrolizumab: 3421}
+  plan:
+    interpretation: Pembrolizumab trials per start year since 2005.
+    search_terms: [{param: query.intr, value: pembrolizumab}]
+    filters: {start_year_min: 2005}
+    analysis: {kind: time_trend, time_field: start_date, granularity: year}
+    visualization: {type: time_series, title: Pembrolizumab trials per year}
+
+- id: vs_nivolumab_compared_to_ipilimumab
+  category: comparison_cohorts
+  label: bad
+  request: {query: "Compare phases for trials involving pembrolizumab vs nivolumab"}
+  probe_totals: {pembrolizumab: 2960, ipilimumab: 1104}
+  plan:
+    interpretation: Phase distribution of pembrolizumab trials compared with ipilimumab trials.
+    comparison: {vary_param: query.intr, values: [pembrolizumab, ipilimumab]}
+    analysis: {kind: count_by, group_by: phase, phase_mode: combined}
+    visualization: {type: grouped_bar_chart, title: Pembrolizumab vs ipilimumab by phase}
+
+- id: georgia_resolved_silently
+  category: ambiguity_handled
+  label: bad
+  note: '"Georgia" is the country or the US state; the plan silently picks the country (a ~1/10 as large population) and states nothing'
+  request: {query: "How many trials in Georgia are recruiting vs completed?"}
+  probe_totals: {All trials: 1012}
+  plan:
+    interpretation: Trials in Georgia by overall status.
+    filters: {countries: [Georgia]}
+    analysis: {kind: count_by, group_by: overall_status}
+    visualization: {type: bar_chart, title: Trials in Georgia by status}
+    assumptions: []
+
+- id: structured_start_year_overrides_question
+  category: structured_override
+  label: good
+  note: the question says 2015 but the caller's start_year field says 2018; the overlay applied 2018 and the judge must not dispute it
+  request: {query: "How has the number of pembrolizumab trials changed per year since 2015?", start_year: 2018}
+  probe_totals: {pembrolizumab: 2530}
+  plan:
+    interpretation: Pembrolizumab trials per start year.
+    search_terms: [{param: query.intr, value: pembrolizumab}]
+    filters: {start_year_min: 2015}
+    analysis: {kind: time_trend, time_field: start_date, granularity: year}
+    visualization: {type: time_series, title: Pembrolizumab trials per year}
+
+- id: clean_trend
+  category: clean
+  label: good
+  request: {query: "How has the number of trials for pembrolizumab changed over time?"}
+  probe_totals: {pembrolizumab: 3421}
+  plan:
+    interpretation: Number of pembrolizumab trials by start year.
+    search_terms: [{param: query.intr, value: pembrolizumab}]
+    analysis: {kind: time_trend, time_field: start_date, granularity: year}
+    visualization: {type: time_series, title: Pembrolizumab trials by start year}
+    assumptions: [Trials are bucketed by their start date; the current year is partial.]
+
+- id: clean_comparison
+  category: clean
+  label: good
+  request: {query: "Compare phases for trials involving pembrolizumab vs nivolumab"}
+  probe_totals: {pembrolizumab: 2960, nivolumab: 2025}
+  plan:
+    interpretation: Distribution of trial phases for pembrolizumab trials compared with nivolumab trials.
+    comparison: {vary_param: query.intr, values: [pembrolizumab, nivolumab]}
+    analysis: {kind: count_by, group_by: phase, phase_mode: combined}
+    visualization: {type: grouped_bar_chart, title: "Trial phases: pembrolizumab vs nivolumab"}
+    assumptions: [Trials testing both drugs appear in both cohorts; the overlap is reported.]
+
+- id: held_out_washington_silent
+  category: ambiguity_handled
+  label: bad
+  note: held out -- "Washington" (the US state or Washington, D.C.) appears nowhere in the prompts; query.locn matches both and the plan states nothing
+  request: {query: "How many trials in Washington are recruiting versus completed?"}
+  probe_totals: {Washington: 9120}
+  plan:
+    interpretation: Trials in Washington by overall status.
+    search_terms: [{param: query.locn, value: Washington}]
+    analysis: {kind: count_by, group_by: overall_status}
+    visualization: {type: bar_chart, title: Trials in Washington by status}
+    assumptions: []
+
+- id: held_out_washington_stated
+  category: ambiguity_handled
+  label: good
+  note: held out twin -- the same plan, with the ambiguity resolved AND stated; must not be flagged
+  request: {query: "How many trials in Washington are recruiting versus completed?"}
+  probe_totals: {Washington: 9120}
+  plan:
+    interpretation: Trials at locations named Washington, by overall status.
+    search_terms: [{param: query.locn, value: Washington}]
+    analysis: {kind: count_by, group_by: overall_status}
+    visualization: {type: bar_chart, title: Trials in Washington by status}
+    assumptions: ["'Washington' is searched as a location name, so trials in Washington State and in Washington, D.C. are both included."]
+

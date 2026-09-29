@@ -209,6 +209,33 @@ async def test_client_does_not_retry_on_400() -> None:
     assert route.call_count == 1
 
 
+@pytest.mark.parametrize(("status", "body"), [(401, "unauthorized"), (403, "forbidden")])
+@respx.mock
+async def test_client_does_not_retry_auth_statuses_and_reports_a_readable_error(
+    status: int, body: str
+) -> None:
+    route = respx.get(STUDIES).mock(return_value=httpx.Response(status, text=body))
+
+    async with CtGovClient(backoff_base_s=0) as client:
+        with pytest.raises(UpstreamError) as info:
+            await client.probe({})
+
+    assert route.call_count == 1
+    assert str(info.value) == f"ClinicalTrials.gov HTTP {status}: {body}"
+    assert info.value.status_code == status
+
+
+@respx.mock
+async def test_client_truncates_a_huge_error_body() -> None:
+    respx.get(STUDIES).mock(return_value=httpx.Response(403, text="x" * 5000))
+
+    async with CtGovClient(backoff_base_s=0) as client:
+        with pytest.raises(UpstreamError) as info:
+            await client.probe({})
+
+    assert len(str(info.value)) < 400
+
+
 # --- D2: Retry-After + jitter --------------------------------------------------------------
 
 

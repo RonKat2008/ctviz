@@ -24,7 +24,7 @@ from collections.abc import Sequence
 from datetime import date
 from functools import cache, lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, NoReturn
 
 from ctviz.agent.judge import Judge, JudgeReview
 from ctviz.agent.overlay import FieldOverride
@@ -134,7 +134,7 @@ class _NeverCalledBackend:
 class _NeverCalledJudgeBackend:
     """A `JudgeBackend` that is never invoked: `ReplayJudge.review()` runs no review at all."""
 
-    def complete(self, system: str, user: str, budget_s: float) -> None:
+    def complete(self, system: str, user: str, budget_s: float) -> NoReturn:
         """Unreachable: `ReplayJudge` never delegates to a backend."""
         raise AssertionError("ReplayJudge should never call its backend")
 

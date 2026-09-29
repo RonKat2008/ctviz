@@ -1,0 +1,28 @@
+# Hand-written explanations for eval failures, keyed by case id. `run_evals --render-only`
+# re-renders evals/report.md from evals/results.json with these notes (no LLM calls).
+
+georgia_resolved_silently: >-
+  (v4) A real judge miss, not an outage: the review was available (gemini-2.5-flash-lite answered)
+  and passed every check. v3 caught this case only after the rubric named "Georgia" as the
+  example ambiguity; S9-fix removed every eval entity from the prompts (overfit guard), and with
+  the generic wording ("a place name that can mean more than one place") the tier-1 judge no
+  longer flags a silently resolved place. This is the honest, non-overfit catch rate for
+  ambiguity_handled. Not re-tuned: one live run was allowed after the de-overfitting.
+
+held_out_washington_silent: >-
+  (v4, held out) Same weakness as georgia_resolved_silently on a place the prompts never mention:
+  the judge passed a plan that silently searches query.locn=Washington (state vs D.C.). Both
+  ambiguity_handled bad cases were missed, so the rubric line itself is weak on the tier-1 model.
+
+held_out_washington_stated: >-
+  (v4, held out) False alarm: the plan states the resolution ("both Washington State and
+  Washington, D.C. are included") yet the judge raised a [major] ambiguity issue claiming it is
+  not stated. The judge reads a stated "both are included" as unresolved; the rubric does not say
+  that including every reading and saying so IS a resolution. Candidate generic fix for a later
+  run (not applied, one run allowed): "stating that all readings are included resolves it".
+
+phase_breast_cancer: >-
+  (v2 confirmation run only) ClinicalTrials.gov answered HTTP 429 Too Many Requests during the
+  17-page (16k-record) fetch, after the client's retries; the pipeline correctly returned
+  502 UPSTREAM_API_ERROR. The plan was correct on attempt 1. Infrastructure, not the planner:
+  it passed in the v1, v2 and v3 runs.

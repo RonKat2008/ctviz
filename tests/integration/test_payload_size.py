@@ -43,12 +43,12 @@ def _gzip_size(data: bytes) -> int:
 
 
 def test_shipped_pembrolizumab_example_stays_under_the_1mb_gzip_budget() -> None:
-    """The shipped `examples/01_draft.response.json` (2,960-trial time series, full citations)."""
-    raw = (EXAMPLES_DIR / "01_draft.response.json").read_bytes()
+    """The shipped `examples/01.response.json` (2,960-trial time series, full citations)."""
+    raw = (EXAMPLES_DIR / "01.response.json").read_bytes()
     gzipped = _gzip_size(raw)
 
     assert gzipped < GZIP_BUDGET_BYTES
-    log.info("[D4] 01_draft.response.json: raw=%sB gzip=%sB", f"{len(raw):,}", f"{gzipped:,}")
+    log.info("[D4] 01.response.json: raw=%sB gzip=%sB", f"{len(raw):,}", f"{gzipped:,}")
 
 
 async def test_nsclc_scale_country_chart_stays_under_the_1mb_gzip_budget() -> None:

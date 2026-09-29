@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="ctviz turns natural-language questions about ClinicalTrials.gov into charts where every mark cites the registry record behind it.">
+  <title>ctviz · Cited trial charts</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230f5c63'/%3E%3Cpath d='M8 23V14M14 23V9M20 23v-6M26 23V12' stroke='%23fcfbf7' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap">
+  <link rel="stylesheet" href="styles/tokens.css">
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/components.css">
+  <link rel="stylesheet" href="styles/panels.css">
+  <!-- Pinned chart runtime (exact versions + SRI). vega-embed bundles vega-tooltip. -->
+  <script defer src="https://cdn.jsdelivr.net/npm/vega@5.33.1/build/vega.min.js" integrity="sha384-NMXhl2TbCXxcN7o4ROC56Funm78m4AylL8gMg/7Kn4YU+wrm23K9l7cY8lDRXQ9d" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/vega-lite@5.23.0/build/vega-lite.min.js" integrity="sha384-D9LYH0esGjcxQJsBuxOuXtCDJGXRWW1+KhluzWPqi0rLJmiR/ygPChefaD+rFFDQ" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/vega-embed@6.29.0/build/vega-embed.min.js" integrity="sha384-M+Ax7e/WFJpxSOF09HzI+Sj4wg9ottVd/uxmV2ItGGh02fLH28t2FAOJx3TJBap5" crossorigin="anonymous"></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#ask">Skip to the question form</a>
+
+  <header class="masthead">
+    <div class="masthead-inner">
+      <a class="wordmark" href="./" aria-label="ctviz home">ctviz<span class="wordmark-dot" aria-hidden="true">.</span></a>
+      <p class="edition" id="edition" aria-live="polite">
+        <span class="mode-badge" id="mode-badge" data-mode="unknown">Checking server…</span>
+        <span class="edition-meta" id="edition-meta"></span>
+      </p>
+      <nav class="masthead-nav" aria-label="Sections">
+        <a href="#ask">Ask</a>
+        <a href="#exhibits">Exhibits</a>
+        <a href="#methods">Methods</a>
+      </nav>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch colour theme">
+        <span class="theme-toggle-glyph" aria-hidden="true"></span><span class="theme-toggle-label">Theme</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="hero-heading">
+      <p class="eyebrow">Cited visualizations of ClinicalTrials.gov</p>
+      <h1 id="hero-heading">Ask a question about clinical trials. Get a chart where <em>every mark cites</em> the registry record that put it there.</h1>
+      <p class="hero-dek">A planner turns your question into a checked query plan; ClinicalTrials.gov supplies the records; every bar, point, node and row carries JSON-pointer citations that an independent verifier re-checks before you see it.</p>
+    </section>
+
+    <section class="ask" id="ask" aria-labelledby="ask-heading">
+      <h2 id="ask-heading" class="section-label"><span class="section-num">I.</span> Ask</h2>
+      <form id="ask-form" class="ask-form" novalidate>
+        <label class="ask-label" for="q">Your question</label>
+        <div class="ask-row">
+          <textarea id="q" name="query" rows="2" minlength="3" maxlength="500" required placeholder="e.g. How has the number of pembrolizumab trials changed over time?" aria-describedby="q-hint q-error"></textarea>
+          <button type="submit" class="btn btn-primary" id="ask-submit">Visualize</button>
+        </div>
+        <p class="ask-hint" id="q-hint"></p>
+        <p class="field-error" id="q-error" role="alert"></p>
+        <div class="chip-row" id="quick-chips" aria-label="Example questions"></div>
+
+        <details class="structured" id="structured">
+          <summary>Structured filters <span class="summary-note">applied by code, never by the model</span></summary>
+          <div class="structured-grid">
+            <label>Drug<input name="drug_name" maxlength="100" autocomplete="off" placeholder="pembrolizumab"></label>
+            <label>Condition<input name="condition" maxlength="100" autocomplete="off" placeholder="glioblastoma"></label>
+            <label>Sponsor<input name="sponsor" maxlength="120" autocomplete="off" placeholder="Merck Sharp &amp; Dohme LLC"></label>
+            <label>Sponsor role
+              <select name="sponsor_role"><option value="lead">Lead sponsor</option><option value="any">Lead or collaborator</option></select>
+            </label>
+            <fieldset class="checks">
+              <legend>Phase</legend>
+              <label><input type="checkbox" name="trial_phase" value="EARLY_PHASE1">Early 1</label>
+              <label><input type="checkbox" name="trial_phase" value="PHASE1">1</label>
+              <label><input type="checkbox" name="trial_phase" value="PHASE2">2</label>
+              <label><input type="checkbox" name="trial_phase" value="PHASE3">3</label>
+              <label><input type="checkbox" name="trial_phase" value="PHASE4">4</label>
+              <label><input type="checkbox" name="trial_phase" value="NA">N/A</label>
+            </fieldset>
+            <label>Status
+              <select name="status" multiple size="4">
+                <option value="RECRUITING">Recruiting</option>
+                <option value="NOT_YET_RECRUITING">Not yet recruiting</option>
+                <option value="ACTIVE_NOT_RECRUITING">Active, not recruiting</option>
+                <option value="ENROLLING_BY_INVITATION">Enrolling by invitation</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="TERMINATED">Terminated</option>
+                <option value="SUSPENDED">Suspended</option>
+                <option value="WITHDRAWN">Withdrawn</option>
+                <option value="UNKNOWN">Unknown</option>
+              </select>
+            </label>
+            <label>Country<input name="country" maxlength="80" autocomplete="off" placeholder="United States"></label>
+            <label>Study type
+              <select name="study_type"><option value="">Any</option><option value="INTERVENTIONAL">Interventional</option><option value="OBSERVATIONAL">Observational</option><option value="EXPANDED_ACCESS">Expanded access</option></select>
+            </label>
+            <label>Start year from<input name="start_year" type="number" inputmode="numeric" min="1900" max="2100" placeholder="2015"></label>
+            <label>Start year to<input name="end_year" type="number" inputmode="numeric" min="1900" max="2100" placeholder="2024"></label>
+            <label class="span-2">NCT IDs<input name="nct_ids" autocomplete="off" placeholder="NCT02658279, NCT04046133" aria-describedby="nct-hint"><span class="input-hint" id="nct-hint">Comma or space separated, up to 50.</span></label>
+            <label>Top N categories<input name="top_n" type="number" inputmode="numeric" min="3" max="50" placeholder="auto"></label>
+          </div>
+          <button type="button" class="btn btn-ghost" id="clear-structured">Clear filters</button>
+        </details>
+      </form>
+    </section>
+
+    <section class="viewer" id="viewer" aria-labelledby="viewer-heading" aria-busy="false">
+      <h2 id="viewer-heading" class="visually-hidden">Result</h2>
+      <div class="viewer-grid">
+        <article class="figure" id="figure" tabindex="-1"></article>
+        <aside class="trust-rail" id="trust" aria-label="Verification and provenance"></aside>
+      </div>
+    </section>
+
+    <section class="exhibits" id="exhibits" aria-labelledby="exhibits-heading">
+      <div class="section-head">
+        <h2 id="exhibits-heading" class="section-label"><span class="section-num">II.</span> Exhibits</h2>
+        <p class="section-dek" id="exhibits-dek">Real responses from the API, one per chart type. Open any exhibit to inspect its citations and the agent trace.</p>
+      </div>
+      <div class="exhibit-grid" id="exhibit-grid"></div>
+    </section>
+
+    <section class="methods" id="methods" aria-labelledby="methods-heading">
+      <div class="section-head">
+        <h2 id="methods-heading" class="section-label"><span class="section-num">III.</span> Methods</h2>
+        <p class="section-dek">How a sentence becomes a cited figure. The model plans; deterministic code does everything that touches a number.</p>
+      </div>
+      <ol class="method-steps">
+        <li><h3>Planner</h3><p>An LLM maps the question onto a typed <code>QueryPlan</code> over the ClinicalTrials.gov API catalog: search terms, filters, analysis kind, chart type.</p></li>
+        <li><h3>Overlay &amp; checks</h3><p>Your structured fields overwrite the plan by code. Static checks reject impossible plans and record every adjustment.</p></li>
+        <li><h3>Probe</h3><p>A count-only request sizes each cohort before any bulk fetch, catching empty or runaway queries early.</p></li>
+        <li><h3>Judge</h3><p>A second model reviews the plan against the question; one revision is allowed, and the verdict is reported, never hidden.</p></li>
+        <li><h3>Fetch</h3><p>Paged, cached requests pull the full study records. Truncation is declared in data coverage.</p></li>
+        <li><h3>Strict match</h3><p>Full-text hits are re-checked field by field; trials that only matched loosely are excluded, with a reason.</p></li>
+        <li><h3>Aggregate &amp; cite</h3><p>Each datum is built with a predicate and one citation per trial: an NCT id, an RFC&nbsp;6901 pointer and the exact excerpt.</p></li>
+        <li><h3>Independent verifier</h3><p>A separate pass re-evaluates every predicate and excerpt against the raw records and recounts totals before the response ships.</p></li>
+      </ol>
+    </section>
+  </main>
+
+  <aside class="drawer" id="cite-drawer" aria-labelledby="cite-title" hidden>
+    <div class="drawer-inner">
+      <header class="drawer-head">
+        <p class="eyebrow" id="cite-eyebrow">Citations</p>
+        <h2 id="cite-title" tabindex="-1">Citations</h2>
+        <p class="drawer-sub" id="cite-sub"></p>
+        <button type="button" class="drawer-close" id="cite-close" aria-label="Close citations">×</button>
+      </header>
+      <div class="drawer-predicate" id="cite-predicate"></div>
+      <div class="drawer-tools">
+        <label class="visually-hidden" for="cite-filter">Filter citations</label>
+        <input id="cite-filter" type="search" placeholder="Filter by NCT id or excerpt" autocomplete="off">
+        <p class="drawer-count" id="cite-count" aria-live="polite"></p>
+      </div>
+      <ol class="cite-list" id="cite-list"></ol>
+      <nav class="pager" id="cite-pager" aria-label="Citation pages"></nav>
+    </div>
+  </aside>
+
+  <footer class="colophon">
+    <p>ctviz · data from <a href="https://clinicaltrials.gov" rel="noopener noreferrer" target="_blank">ClinicalTrials.gov</a> API v2 · charts by Vega-Lite · set in Newsreader &amp; IBM Plex Mono</p>
+    <p class="colophon-links"><a href="/v1/schema">/v1/schema</a> <a href="/health">/health</a> <a href="/docs">OpenAPI docs</a></p>
+  </footer>
+</body>
+</html>

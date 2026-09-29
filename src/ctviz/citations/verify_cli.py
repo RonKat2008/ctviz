@@ -7,7 +7,8 @@ import argparse
 import gzip
 import json
 import sys
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -28,6 +29,15 @@ class InputError(Exception):
     """An unreadable/malformed input file: reported as one readable line, exit code 2."""
 
 
+@dataclass(frozen=True)
+class CohortFetch:
+    """One cohort fetch recorded beside the raw records: its request params and the NCT IDs it
+    returned, so an offline run knows which cohort each shipped record actually came from."""
+
+    params: Mapping[str, str]
+    nct_ids: frozenset[str]
+
+
 def _default_raw_path(response_path: Path) -> Path:
     """`NN.response.json` -> `NN.raw.json.gz` beside it (the shipped-example convention)."""
     name = response_path.name
@@ -46,13 +56,16 @@ def _read_response(path: Path) -> VisualizeResponse:
         raise InputError(f"{path} is not a valid VisualizeResponse JSON file") from exc
 
 
-def _read_raw_records(path: Path) -> RawById:
-    """A `NN.raw.json.gz` (`{"records": [...]}` or a bare list) as an nct_id -> record map."""
+def _read_raw_file(path: Path) -> tuple[RawById, list[CohortFetch]]:
+    """A `NN.raw.json.gz` (`{"records": [...], "cohort_fetches": [...]}` or a bare list) as an
+    nct_id -> record map plus the recorded per-cohort fetches (empty for older files)."""
     try:
         with gzip.open(path, "rt", encoding="utf-8") as handle:
             body = json.load(handle)
         records = body["records"] if isinstance(body, dict) else body
-        return {r["protocolSection"]["identificationModule"]["nctId"]: r for r in records}
+        raw_by_id = {r["protocolSection"]["identificationModule"]["nctId"]: r for r in records}
+        fetches = body.get("cohort_fetches", []) if isinstance(body, dict) else []
+        return raw_by_id, [CohortFetch(dict(f["params"]), frozenset(f["nct_ids"])) for f in fetches]
     except OSError as exc:
         raise InputError(f"cannot read raw records file {path}: {exc}") from exc
     except (ValueError, KeyError, TypeError) as exc:
@@ -69,16 +82,38 @@ def _single_cohort_population(response: VisualizeResponse, raw_by_id: RawById) -
     return CohortPopulation(frozenset(raw_by_id) - dropped, declared)
 
 
-def _comparison_population(cohort: CohortSummary, raw_by_id: RawById) -> CohortPopulation:
-    """Multi-cohort files carry no per-cohort exclusion list, so the population is the shipped
-    records satisfying the cohort's base predicate, with no declared exclusions (weaker than
-    the live check: an analysis exclusion there surfaces as a structure violation)."""
-    kept = frozenset(i for i, raw in raw_by_id.items() if evaluate(cohort.base_predicate, raw))
+def _fetch_for(cohort: CohortSummary, fetches: Iterable[CohortFetch]) -> CohortFetch | None:
+    """The recorded fetch whose params carry this cohort's defining value, if one was shipped."""
+    wanted = cohort.value.strip().casefold()
+    for fetch in fetches:
+        if any(str(v).strip().casefold() == wanted for v in fetch.params.values()):
+            return fetch
+    return None
+
+
+def _comparison_population(
+    cohort: CohortSummary, raw_by_id: RawById, fetches: Sequence[CohortFetch]
+) -> CohortPopulation:
+    """Records this cohort's own fetch returned that satisfy its base predicate. Older files
+    without recorded fetches fall back to every shipped record satisfying the predicate
+    (weaker: a record fetched only for another cohort can then leak in)."""
+    fetch = _fetch_for(cohort, fetches)
+    pool = (
+        raw_by_id if fetch is None else {i: raw_by_id[i] for i in fetch.nct_ids if i in raw_by_id}
+    )
+    kept = frozenset(i for i, raw in pool.items() if evaluate(cohort.base_predicate, raw))
     return CohortPopulation(kept, {})
 
 
+def comparison_populations(
+    cohorts: Sequence[CohortSummary], raw_by_id: RawById, fetches: Sequence[CohortFetch]
+) -> dict[str, CohortPopulation]:
+    """Per-cohort populations for a multi-cohort response, from the shipped files alone."""
+    return {c.label: _comparison_population(c, raw_by_id, fetches) for c in cohorts}
+
+
 def populations_from_files(
-    response: VisualizeResponse, raw_by_id: RawById
+    response: VisualizeResponse, raw_by_id: RawById, fetches: Sequence[CohortFetch] = ()
 ) -> dict[str, CohortPopulation]:
     """The per-cohort populations an offline run can reconstruct from the shipped files."""
     if response.meta is None:
@@ -86,7 +121,7 @@ def populations_from_files(
     cohorts = response.meta.cohorts
     if len(cohorts) == 1 and response.meta.data_coverage is not None:
         return {cohorts[0].label: _single_cohort_population(response, raw_by_id)}
-    return {c.label: _comparison_population(c, raw_by_id) for c in cohorts}
+    return comparison_populations(cohorts, raw_by_id, fetches)
 
 
 def _write_report(check: CitationCheck | None, violations: Sequence[str]) -> None:
@@ -105,9 +140,10 @@ def _write_report(check: CitationCheck | None, violations: Sequence[str]) -> Non
 def _run(args: argparse.Namespace) -> int:
     """Load both files, verify, report; returns the PASS/FAIL exit code."""
     response = _read_response(args.response)
-    raw_by_id = _read_raw_records(args.raw or _default_raw_path(args.response))
+    raw_by_id, fetches = _read_raw_file(args.raw or _default_raw_path(args.response))
     try:
-        check = verify_response(response, raw_by_id, populations_from_files(response, raw_by_id))
+        populations = populations_from_files(response, raw_by_id, fetches)
+        check = verify_response(response, raw_by_id, populations)
     except CitationCheckError as exc:
         _write_report(None, exc.violations)
         return EXIT_FAIL

@@ -26,6 +26,11 @@ log = logging.getLogger(__name__)
 MAX_OUTPUT_TOKENS = 2_000
 RETRY_MAX_OUTPUT_TOKENS = 4_000
 CLIENT_UNAVAILABLE_MESSAGE = "The planner LLM is unavailable; try again later."
+CLIENT_AUTH_MESSAGE = (
+    "The planner LLM's credentials were rejected by the provider; "
+    "the server's API key needs attention."
+)
+AUTH_FAILURE_STATUSES = frozenset({401, 403})
 
 
 class PlannerBackend(Protocol):
@@ -87,6 +92,16 @@ def _refusal_text(response: Any) -> str | None:
     return None
 
 
+def _map_sdk_error(exc: OpenAIError) -> LLMUnavailableError:
+    """Log type + status only (never SDK text) and pick the fixed client-safe message."""
+    status = getattr(exc, "status_code", None)
+    if status in AUTH_FAILURE_STATUSES:
+        log.error("planner auth failed: %s status=%s", type(exc).__name__, status)
+        return LLMUnavailableError(CLIENT_AUTH_MESSAGE)
+    log.error("OpenAI planner call failed: %s (status=%s)", type(exc).__name__, status)
+    return LLMUnavailableError(CLIENT_UNAVAILABLE_MESSAGE)
+
+
 class OpenAIPlannerBackend:
     """`PlannerBackend` over `client.responses.parse`: strict structured output, no temperature."""
 
@@ -114,9 +129,7 @@ class OpenAIPlannerBackend:
         try:
             response = self._call(system, user, max_output_tokens)
         except OpenAIError as exc:
-            status = getattr(exc, "status_code", None)
-            log.error("OpenAI planner call failed: %s (status=%s)", type(exc).__name__, status)
-            raise LLMUnavailableError(CLIENT_UNAVAILABLE_MESSAGE) from exc
+            raise _map_sdk_error(exc) from exc
         except ValidationError as exc:
             log.warning("Planner response failed schema validation: %s", type(exc).__name__)
             raise _RetryNeededError from exc
@@ -127,16 +140,20 @@ class OpenAIPlannerBackend:
             raise _RetryNeededError("incomplete or unparsed response")
         return cast(QueryPlan, response.output_parsed)
 
-    def _call(self, system: str, user: str, max_output_tokens: int) -> Any:
-        """One `responses.parse` call; the SDK never receives `temperature` for gpt-5.x."""
-        return self._client.responses.parse(
-            model=self._model,
-            reasoning={"effort": self._effort},
-            input=[
+    def _request(self, system: str, user: str, max_output_tokens: int) -> dict[str, Any]:
+        """The `responses.parse` arguments; the SDK never receives `temperature` for gpt-5.x."""
+        return {
+            "model": self._model,
+            "reasoning": {"effort": self._effort},
+            "input": [
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
             ],
-            text_format=QueryPlan,
-            timeout=LLM_TIMEOUT_S,
-            max_output_tokens=max_output_tokens,
-        )
+            "text_format": QueryPlan,
+            "timeout": LLM_TIMEOUT_S,
+            "max_output_tokens": max_output_tokens,
+        }
+
+    def _call(self, system: str, user: str, max_output_tokens: int) -> Any:
+        """One `responses.parse` call."""
+        return self._client.responses.parse(**self._request(system, user, max_output_tokens))

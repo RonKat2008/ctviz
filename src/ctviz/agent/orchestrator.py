@@ -140,6 +140,7 @@ def _judge_event(review: JudgeReview, attempt: int) -> dict[str, Any]:
     return {
         "attempt": attempt,
         "step": "judge",
+        "model": review.model,
         "available": review.available,
         "needs_revision": review.needs_revision,
         "model_verdict": review.model_verdict,
@@ -147,6 +148,7 @@ def _judge_event(review: JudgeReview, attempt: int) -> dict[str, Any]:
         "failed_checks": list(review.failed_checks),
         "issues": [_issue_text(i) for i in review.issues],
         "discarded_structured_slot_issues": review.discarded,
+        "discarded_ungrounded_issues": review.discarded_ungrounded,
     }
 
 
@@ -251,6 +253,8 @@ def _execute(
     plan, guard_notes = guard_text(attempt.plan, deps.request)
     review, judge = attempt.review, deps.judge
     issues = [_issue_text(i) for i in review.issues] if review and status in _FLAGGED else []
+    # §9.5: disclose (and family-check) the model that actually answered, e.g. tier 2.
+    judge_model = (review.model if review else None) or (judge.model_name if judge else None)
     return PlanningOutcome(
         plan=plan,
         error_code=None,
@@ -261,8 +265,8 @@ def _execute(
         adjustments=[*attempt.notes, *guard_notes],
         probe_totals=attempt.probe.totals if attempt.probe else {},
         judge_issues=issues,
-        judge_model=judge.model_name if judge else None,
-        same_family=same_family(deps.planner.model_name, judge.model_name) if judge else False,
+        judge_model=judge_model,
+        same_family=same_family(deps.planner.model_name, judge_model) if judge_model else False,
         warnings=[*(attempt.probe.warnings if attempt.probe else []), *disclosures],
     )
 

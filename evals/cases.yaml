@@ -1,0 +1,194 @@
+# S9 planner evals (PLAN.md §16.4): one case per class in evals/coverage.py (every §14 class, the
+# verbatim appendix question, plus held-out cases whose entities/wording appear nowhere in the
+# prompts), phrased the way users talk. Each case asserts PROPERTIES of the plan
+# (evals/matcher.py documents the key shapes) and the expected envelope outcome ("ok" or an error
+# code). `planner_calls` (optional) bounds how many planner calls the case may make: 0 = the §8.4
+# fast path, 2 = the revise path must run. Stated phases/statuses are checked as exact sets.
+
+- id: trend_pembro_since_2015
+  class: trend
+  note: §14 row 1
+  request: {query: "How has the number of trials for pembrolizumab changed per year since 2015?"}
+  expect:
+    search_terms: [{param: query.intr, value_contains: pembrolizumab}]
+    filters.start_year_min: 2015
+    analysis.kind: time_trend
+    visualization.type: [time_series, bar_chart]
+  outcome: ok
+
+- id: phase_breast_cancer
+  class: phase_distribution
+  note: §14 row 3
+  request: {query: "How are breast cancer trials distributed across phases?"}
+  expect:
+    search_terms: [{param: query.cond, value_contains: breast cancer}]
+    analysis.kind: count_by
+    analysis.group_by: phase
+    visualization.type: [bar_chart]
+    comparison: null
+  outcome: ok
+
+- id: country_ms_recruiting
+  class: country_recruiting
+  note: §14 row 7 (recruiting-site rule)
+  request: {query: "Which countries have the most recruiting trials for multiple sclerosis?"}
+  expect:
+    search_terms: [{param: query.cond, value_contains: multiple sclerosis}]
+    filters.overall_statuses_exactly: [RECRUITING]
+    analysis.kind: count_by
+    analysis.group_by: country
+    visualization.type: [bar_chart]
+  outcome: ok
+
+- id: histogram_psoriasis_p2
+  class: histogram
+  note: §14 row 11
+  request: {query: "What does the distribution of enrollment sizes look like for Phase 2 psoriasis trials?"}
+  expect:
+    search_terms: [{param: query.cond, value_contains: psoriasis}]
+    filters.phases_exactly: [PHASE2]
+    analysis.kind: histogram
+    analysis.measure_x: enrollment
+    visualization.type: [histogram]
+  outcome: ok
+
+- id: scatter_crohns_p3_completed
+  class: scatter
+  note: §14 row 10
+  request: {query: "Is there a relationship between enrollment and trial duration for completed Phase 3 Crohn's disease trials?"}
+  expect:
+    search_terms: [{param: query.cond, value_contains: crohn}]
+    filters.phases_exactly: [PHASE3]
+    filters.overall_statuses_exactly: [COMPLETED]
+    analysis.kind: scatter
+    analysis.measure_x: [duration_months, enrollment]
+    analysis.measure_y: [duration_months, enrollment]
+    distinct: [analysis.measure_x, analysis.measure_y]
+    visualization.type: [scatter_plot]
+  outcome: ok
+
+- id: network_gbm_sponsor_drug
+  class: network
+  note: §14 row 8
+  request: {query: "Show me a network of which sponsors are testing which drugs in glioblastoma"}
+  expect:
+    search_terms: [{param: query.cond, value_contains: glioblastoma}]
+    analysis.kind: network
+    analysis.network_type: sponsor_drug
+    visualization.type: [network_graph]
+  outcome: ok
+
+- id: compare_pembro_nivo_phases
+  class: comparison
+  note: §14 row 5
+  request: {query: "Compare phases for trials involving pembrolizumab vs nivolumab"}
+  expect:
+    comparison.vary_param: query.intr
+    comparison.values_contain: [pembrolizumab, nivolumab]
+    analysis.kind: count_by
+    analysis.group_by: phase
+    visualization.type: [grouped_bar_chart]
+  outcome: ok
+
+- id: sponsor_lead_merck_status
+  class: sponsor_lead
+  note: §14 row 13 -- "Merck's trials" means lead sponsor; completed vs terminated is a status breakdown, not a comparison
+  request: {query: "What share of Merck's Phase 3 trials were completed versus terminated?"}
+  expect:
+    search_terms: [{param: query.lead, value_contains: merck}]
+    filters.phases_exactly: [PHASE3]
+    analysis.kind: count_by
+    analysis.group_by: overall_status
+    visualization.type: [bar_chart]
+    comparison: null
+  outcome: ok
+
+- id: nct_lookup_status
+  class: nct_lookup
+  note: §14 row 14 -- the §8.4 fast path, no LLM call
+  request: {query: "What is the status of NCT04368728?"}
+  expect:
+    analysis.kind: trial_lookup
+    filters.nct_ids_contain: [NCT04368728]
+    visualization.type: [table, metric]
+  outcome: ok
+  planner_calls: [0]
+
+- id: misspelled_drug_field
+  class: misspelled_drug
+  note: §14 row 16 / Review Focus 2 -- probe 0, revise, probe 0, NO_MATCHING_TRIALS (never an empty chart)
+  request: {query: "How many trials for this drug are in each phase?", drug_name: pembrolizumap}
+  expect:
+    search_terms: [{param: query.intr, value_contains: pembrolizumap}]
+    analysis.kind: count_by
+    analysis.group_by: phase
+  outcome: NO_MATCHING_TRIALS
+  planner_calls: [2]
+
+- id: ambiguous_recent_obesity
+  class: ambiguous
+  note: '"recent" is vague; §9.3 rule 5 wants a concrete default window (start_year_min) stated in assumptions as that year -- and the statement must survive the digit guard into the executed plan. Tightened after v1 and again in S9-fix (must state the year, not just the word), see DEVLOG'
+  request: {query: "Show me recent trends in obesity trials"}
+  expect:
+    search_terms: [{param: query.cond, value_contains: obesity}]
+    analysis.kind: time_trend
+    visualization.type: [time_series, bar_chart]
+    filters.start_year_min_present: true
+    assumptions_state_value_of: filters.start_year_min
+  outcome: ok
+
+- id: out_of_scope_best_drug
+  class: out_of_scope
+  note: §14 row 15 -- OUT_OF_SCOPE, no judge call
+  request: {query: "What's the best cancer drug?"}
+  expect:
+    answerable: false
+  outcome: OUT_OF_SCOPE
+  planner_calls: [1]
+
+- id: row19_drugs_co_occur_verbatim
+  class: network_unscoped
+  note: §14 row 19, the verbatim appendix question -- probe finds the whole corpus too broad, one revise; plan 2 (still over the cap) runs on the most recent 20k, disclosed
+  request: {query: "Which drugs frequently co-occur in combination studies?"}
+  expect:
+    analysis.kind: network
+    analysis.network_type: drug_drug
+    visualization.type: [network_graph]
+  outcome: ok
+  planner_calls: [2]
+
+- id: judge_revise_involving_sponsor
+  class: judge_revise
+  note: '"involving X" is query.spons (lead OR collaborator) per the §9.3 rubric; the planner prompt does not spell this out, so a query.lead plan is likely flagged and revised. Scoring asserts a revise ran whenever the judge flags attempt 1'
+  request: {query: "How are trials involving Novartis distributed across phases?"}
+  expect:
+    search_terms: [{param: query.spons, value_contains: novartis}]
+    analysis.kind: count_by
+    analysis.group_by: phase
+    visualization.type: [bar_chart]
+  outcome: ok
+  planner_calls: [1, 2]
+
+- id: held_out_recency_lately
+  class: held_out_recency
+  note: held out -- neither "lately" nor Parkinson's appears in the prompts; the generic vague-time rule must still yield a stated, concrete window
+  request: {query: "Have Parkinson's disease trials picked up lately?"}
+  expect:
+    search_terms: [{param: query.cond, value_contains: parkinson}]
+    analysis.kind: time_trend
+    visualization.type: [time_series, bar_chart]
+    filters.start_year_min_present: true
+    assumptions_state_value_of: filters.start_year_min
+  outcome: ok
+
+- id: held_out_sponsor_variants_roche
+  class: held_out_sponsor_variants
+  note: held out -- Roche (Hoffmann-La Roche / Genentech) appears nowhere in the prompts; "Roche's trials" means lead sponsor
+  request: {query: "How are Roche's trials distributed across phases?"}
+  expect:
+    search_terms: [{param: query.lead, value_contains: roche}]
+    analysis.kind: count_by
+    analysis.group_by: phase
+    visualization.type: [bar_chart]
+    comparison: null
+  outcome: ok

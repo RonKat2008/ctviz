@@ -10,16 +10,24 @@ import re
 from collections.abc import Callable
 from datetime import date
 
-from ctviz.agent.digit_guard import guard_text
+from ctviz.agent.digit_guard import guard_text as guard_digits
+from ctviz.agent.entity_guard import guard_entities
 from ctviz.catalog.countries import COUNTRIES
 from ctviz.ctgov.compiler import compile_plan
 from ctviz.errors import PlanInvalidError
 from ctviz.schemas.enums import AnalysisKind, VizType
 from ctviz.schemas.plan import Analysis, EnumFilters, QueryPlan, SearchTerm
-from ctviz.schemas.request import MAX_YEARS_AHEAD, MIN_YEAR, canonical_country
+from ctviz.schemas.request import (
+    MAX_YEARS_AHEAD,
+    MIN_YEAR,
+    VisualizeRequest,
+    canonical_country,
+)
 
 __all__ = [
     "EXECUTABLE_KINDS",
+    "OPTIONAL_ANALYSIS_MODIFIERS",
+    "REQUIRED_ANALYSIS_FIELDS",
     "check_executable",
     "check_plan",
     "coerce_plan_countries",
@@ -77,6 +85,12 @@ _KIND_DEFINING_FIELDS = (
     "measure_x",
     "measure_y",
     "network_type",
+)
+# Public views of the two tables above, for the judge rubric (prompts.py renders its slot list
+# from them, so the rubric can never disagree with what these checks enforce).
+REQUIRED_ANALYSIS_FIELDS = _REQUIRED_FIELDS
+OPTIONAL_ANALYSIS_MODIFIERS = tuple(
+    name for name in Analysis.model_fields if name not in {"kind", *_KIND_DEFINING_FIELDS}
 )
 # Only these viz types can show several cohorts side by side (§7.3: "grouped", "multi-line").
 _MULTI_COHORT_VIZ = frozenset({VizType.GROUPED_BAR_CHART, VizType.TIME_SERIES})
@@ -342,3 +356,10 @@ def normalize_plan(plan: QueryPlan) -> tuple[QueryPlan, list[str]]:
         plan, step_notes = step(plan)
         notes += step_notes
     return plan, notes
+
+
+def guard_text(plan: QueryPlan, request: VisualizeRequest) -> tuple[QueryPlan, list[str]]:
+    """Prose hygiene: the digit guard, then the entity guard; returns plan + adjustment notes."""
+    digit_safe, digit_notes = guard_digits(plan, request)
+    guarded, entity_notes = guard_entities(digit_safe, request)
+    return guarded, [*digit_notes, *entity_notes]

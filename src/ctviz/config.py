@@ -17,12 +17,14 @@ HTTP_CONNECT_TIMEOUT_S = 5.0
 HTTP_RETRIES = 3
 LLM_TIMEOUT_S = 30.0
 # Fix B -- the judge's time budget (§4.5). Each OpenRouter call times out at JUDGE_TIMEOUT_S;
-# ALL judge time in one /visualize request (both reviews, the one retry on a schema-invalid
-# output or a 429, and any Retry-After wait) shares JUDGE_REQUEST_BUDGET_S, and no call (first
-# or retry) starts with less than JUDGE_MIN_CALL_S left -- it fails open instead. Worst case:
-# judge total <= 12 s, inside §4.5's judge (3 s) + revise-loop (+10 s) = 13 s envelope, which
-# is what the judge gates (was: 2 reviews x (20 s + 2 s wait + 20 s) = 84 s). Typical: one
-# 0.5-1.5 s call. The per-request total stays ~30 s + the judge's share (§4.5 worst case).
+# ALL judge time in one /visualize request -- both reviews, every §9.5 tier (tier 1, then the
+# tier-2 fallback after a schema-invalid output / 503 / transport error), the one 429 retry per
+# tier and any Retry-After wait -- shares JUDGE_REQUEST_BUDGET_S: each review gets one deadline
+# (clock + what the earlier review left) and no call or tier starts with less than
+# JUDGE_MIN_CALL_S left -- it fails open instead. Worst case: judge total <= 12 s however many
+# tiers run, inside §4.5's judge (3 s) + revise-loop (+10 s) = 13 s envelope, which is what the
+# judge gates (was: 2 reviews x (20 s + 2 s wait + 20 s) = 84 s). Typical: one 0.5-1.5 s tier-1
+# call; a tier-2 answer adds one more (~1-3 s). The request total stays ~30 s + this share.
 JUDGE_TIMEOUT_S = 8.0
 JUDGE_REQUEST_BUDGET_S = 12.0
 JUDGE_MIN_CALL_S = 2.0
@@ -51,6 +53,7 @@ class Settings(BaseSettings):
     planner_model: str = "gpt-5.4-mini"
     planner_reasoning_effort: Literal["low", "medium", "high"] = "low"
     judge_model: str = "google/gemini-2.5-flash-lite"
+    judge_fallback_model: str = "anthropic/claude-haiku-4.5"  # §9.5 tier 2; "" disables it
     app_url: str = "http://localhost:8000"
     app_name: str = "ctviz"
 

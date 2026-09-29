@@ -8,3 +8,9 @@ smoke:   ; uv run pytest -m live tests/live/test_smoke.py -v
 # S8 Task 8.1: no .env, no OpenAI/OpenRouter key, no network -- answers only the canned example
 # questions in examples/canned_plans.json, served from tests/fixtures/ctgov/*.json.gz.
 demo-offline: ; PLANNER_MODE=replay uv run uvicorn ctviz.api.app:app --port 8000
+
+.PHONY: examples zip
+# S10 Task 10.1: LIVE (needs .env keys + network). Writes examples/0N.{request,response,raw,verify}.
+examples: ; uv run python scripts/generate_examples.py
+# S10 Task 10.2: dist/ctviz.zip from git HEAD + README/DESIGN/examples/evals report/web, secret-scanned.
+zip: ; bash scripts/package_zip.sh
