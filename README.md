@@ -1,6 +1,6 @@
 # ctviz
 
-**Demo video (2.5 min):** [watch on Google Drive](https://drive.google.com/file/d/1DnCL9A0Yw9TySxYY96eS8LRgyNGSmrOc/view?usp=sharing) — me running questions through the
+**Demo video (1 min):** [watch on Google Drive](https://drive.google.com/file/d/1DnCL9A0Yw9TySxYY96eS8LRgyNGSmrOc/view?usp=sharing) — me running questions through the
 web UI and explaining the answers.
 
 ## 1. What it is
