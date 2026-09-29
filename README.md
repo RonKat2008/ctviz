@@ -1,7 +1,7 @@
 # ctviz
 
 **Demo video (1 min):** [watch on Google Drive](https://drive.google.com/file/d/1DnCL9A0Yw9TySxYY96eS8LRgyNGSmrOc/view?usp=sharing) — me running questions through the
-web UI and explaining the answers.
+web UI and showing how it works.
 
 ## 1. What it is
 
