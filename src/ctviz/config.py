@@ -3,7 +3,7 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import SecretStr
+from pydantic import SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 CTGOV_BASE_URL = "https://clinicaltrials.gov/api/v2"
@@ -61,6 +61,15 @@ class Settings(BaseSettings):
     rate_limit_trust_forwarded_for: bool = False
     app_url: str = "http://localhost:8000"
     app_name: str = "ctviz"
+
+    @field_validator("openai_api_key", "openrouter_api_key", mode="before")
+    @classmethod
+    def _blank_key_is_unset(cls, value: object) -> object:
+        """`KEY=` left blank in a copied .env.example means "not set", not an empty-string key
+        (an empty key would crash the SDK client at startup instead of failing open)."""
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
 
 
 @lru_cache(maxsize=1)

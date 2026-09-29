@@ -25,3 +25,28 @@ def test_settings_never_expose_keys_in_repr() -> None:
 def test_fetch_limits_match_the_api() -> None:
     assert PAGE_SIZE == 1000
     assert MAX_RECORDS == 20_000
+
+
+@pytest.mark.parametrize("blank", ["", "   "])
+def test_blank_keys_from_a_copied_env_example_count_as_not_set(
+    monkeypatch: pytest.MonkeyPatch, blank: str
+) -> None:
+    monkeypatch.setenv("OPENAI_API_KEY", blank)
+    monkeypatch.setenv("OPENROUTER_API_KEY", blank)
+
+    settings = Settings(_env_file=None)
+
+    assert settings.openai_api_key is None
+    assert settings.openrouter_api_key is None
+
+
+def test_planner_builds_without_crashing_when_the_key_is_blank(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from ctviz.agent.planner import build_planner
+
+    monkeypatch.setenv("OPENAI_API_KEY", "")
+
+    planner = build_planner(Settings(_env_file=None))
+
+    assert planner is not None
