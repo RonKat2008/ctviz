@@ -8,6 +8,7 @@ from ctviz.errors import (
     LLMUnavailableError,
     OutOfScopeError,
     PlanInvalidError,
+    RateLimitedError,
     UpstreamError,
 )
 from ctviz.schemas.response import ErrorInfo, VisualizeResponse
@@ -21,13 +22,14 @@ _STATUS_AND_CODE: dict[type[CtvizError], tuple[int, str]] = {
     OutOfScopeError: (200, "OUT_OF_SCOPE"),
     PlanInvalidError: (200, "PLAN_INVALID"),
     CitationCheckError: (500, "CITATION_CHECK_FAILED"),
+    RateLimitedError: (429, "RATE_LIMITED"),
 }
 
 
 def _log_failure(exc: Exception, status: int) -> None:
     """A 200 is a domain outcome, not a bug: log it at warning with no traceback. A real failure
     (502/503/500) logs the full traceback for on-call debugging."""
-    if status == 200:
+    if status in (200, 429):
         log.warning("Pipeline domain outcome: %s", exc)
     else:
         log.exception("Pipeline failure")

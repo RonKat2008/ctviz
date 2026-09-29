@@ -64,6 +64,7 @@ const ERROR_COPY = {
   INVALID_REQUEST: ["The request was rejected", "error"],
   UPSTREAM_API_ERROR: ["ClinicalTrials.gov did not respond", "error"],
   LLM_UNAVAILABLE: ["The planner model is unavailable", "error"],
+  RATE_LIMITED: ["Too many questions at once", "error"],
   CITATION_CHECK_FAILED: ["The citation verifier rejected this result", "error"],
   INTERNAL_ERROR: ["Something broke on the server", "error"],
   NETWORK_ERROR: ["Can't reach the ctviz API", "error"],
@@ -73,6 +74,7 @@ function hintFor(code, mode) {
   switch (code) {
     case "LLM_UNAVAILABLE": return "Check the OpenAI key on the server, or run the keyless demo with `make demo-offline` (PLANNER_MODE=replay).";
     case "UPSTREAM_API_ERROR": return "The registry API may be rate-limiting or down. Try again in a moment.";
+    case "RATE_LIMITED": return "This server limits how many questions each visitor can ask per minute. Wait a moment and try again.";
     case "NO_MATCHING_TRIALS": return "Loosen a filter (phase, status, years) or check the spelling of the drug or condition.";
     case "OUT_OF_SCOPE": return "ctviz answers questions about registered trials: counts, trends, distributions, networks and key facts.";
     case "PLAN_INVALID": return mode === "replay" ? "Replay mode answers only its offline example questions — pick one below." : "Try rephrasing the question more concretely.";

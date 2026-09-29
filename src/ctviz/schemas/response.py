@@ -18,6 +18,7 @@ ErrorCode = Literal[
     "LLM_UNAVAILABLE",
     "CITATION_CHECK_FAILED",
     "INTERNAL_ERROR",
+    "RATE_LIMITED",
 ]
 
 JudgeStatus = Literal[

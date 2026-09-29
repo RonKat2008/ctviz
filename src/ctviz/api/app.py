@@ -17,10 +17,11 @@ from fastapi.staticfiles import StaticFiles
 from ctviz.agent.judge import Judge, build_judge
 from ctviz.agent.planner import Planner, build_planner
 from ctviz.api.errors import to_response
+from ctviz.api.rate_limit import RateLimiter, client_key
 from ctviz.api.replay import build_replay_ctgov_client, build_replay_judge, build_replay_planner
 from ctviz.config import Settings, get_settings
 from ctviz.ctgov.client import CtGovClient
-from ctviz.errors import CtvizError
+from ctviz.errors import CtvizError, RateLimitedError
 from ctviz.pipeline import run_pipeline
 from ctviz.pipeline_meta import resolve_code_version
 from ctviz.schemas.request import VisualizeRequest
@@ -69,6 +70,10 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.ctgov_client = _build_ctgov_client(settings)
     app.state.planner = _build_planner(settings)
     app.state.judge = _build_judge(settings)
+    app.state.rate_limiter = RateLimiter(
+        per_minute=settings.rate_limit_per_minute, per_day=settings.rate_limit_per_day
+    )
+    app.state.trust_forwarded_for = settings.rate_limit_trust_forwarded_for
     try:
         yield
     finally:
@@ -121,7 +126,8 @@ async def _invalid_request(_: Request, exc: RequestValidationError) -> JSONRespo
 async def _domain_error(_: Request, exc: CtvizError) -> JSONResponse:
     """Every expected pipeline failure: mapped by `api.errors.to_response` (§12.2)."""
     status, response = to_response(exc)
-    return JSONResponse(status_code=status, content=response.model_dump())
+    headers = {"Retry-After": str(exc.retry_after_s)} if isinstance(exc, RateLimitedError) else None
+    return JSONResponse(status_code=status, content=response.model_dump(), headers=headers)
 
 
 @app.exception_handler(Exception)
@@ -168,8 +174,25 @@ async def schema() -> dict[str, object]:
     }
 
 
+def get_rate_limiter(request: Request) -> RateLimiter:
+    """The process-wide limiter built in the lifespan (a dependency so tests can override it)."""
+    limiter: RateLimiter = request.app.state.rate_limiter
+    return limiter
+
+
+def enforce_rate_limit(
+    request: Request, limiter: Annotated[RateLimiter, Depends(get_rate_limiter)]
+) -> None:
+    """Reject the request with 429 RATE_LIMITED when the caller or the daily cap is exhausted."""
+    trust = bool(getattr(request.app.state, "trust_forwarded_for", False))
+    decision = limiter.check(client_key(request, trust))
+    if not decision.allowed:
+        raise RateLimitedError(decision.retry_after_s)
+
+
 @app.post("/v1/visualize", response_model=VisualizeResponse)
 async def visualize(
+    _: Annotated[None, Depends(enforce_rate_limit)],
     body: VisualizeRequest,
     planner: Annotated[Planner, Depends(get_planner)],
     judge: Annotated[Judge, Depends(get_judge)],

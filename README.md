@@ -121,6 +121,7 @@ A frontend has **one parse path: check `ok`**. Domain outcomes are HTTP 200 with
 | ClinicalTrials.gov unreachable / 5xx | 502 | false | `UPSTREAM_API_ERROR` |
 | No LLM reachable for the planner / no key | 503 | false | `LLM_UNAVAILABLE` |
 | Citation verifier failed (our bug; fails closed) | 500 | false | `CITATION_CHECK_FAILED` |
+| Too many requests (per client per minute, or the global daily cap) | 429 | false | `RATE_LIMITED` (+ `Retry-After` header) |
 | Anything else | 500 | false | `INTERNAL_ERROR` (no stack traces) |
 
 ### Visualization types and encodings
@@ -1213,9 +1214,11 @@ _How this list was made: items 1–12 were drafted with Claude from the design a
     benchmark drawn from real users or labeled by clinical experts.
 15. **Latency is dominated by LLM calls.** Typical answers take 5–10 s (p50 7.5 s); a deliberately
     broad 20,000-record question reached 32.8 s (target 30 s).
-16. **Not production-deployed.** No authentication or rate limiting on our API, an in-memory cache
-    per process, and ClinicalTrials.gov itself can rate-limit very large fetches (we saw one 429 in
-    the evals; it surfaces as a clean 502).
+16. **Not production-deployed.** `POST /v1/visualize` is rate limited in memory (default 10 per
+    client IP per minute and 500 per day in total, a cost guard; set `RATE_LIMIT_PER_MINUTE` /
+    `RATE_LIMIT_PER_DAY`), but there is no authentication, and the limiter and cache are per
+    process. ClinicalTrials.gov itself can rate-limit very large fetches (we saw one 429 in the
+    evals; it surfaces as a clean 502).
 17. **The web UI was checked in Chrome only** (desktop and mobile widths, light and dark); there is
     no demo video.
 

@@ -54,6 +54,11 @@ class Settings(BaseSettings):
     planner_reasoning_effort: Literal["low", "medium", "high"] = "low"
     judge_model: str = "google/gemini-2.5-flash-lite"
     judge_fallback_model: str = "anthropic/claude-haiku-4.5"  # §9.5 tier 2; "" disables it
+    # POST /v1/visualize limits (0 disables): per client IP per minute, and a global daily cap
+    # that bounds LLM spend. Trust X-Forwarded-For only behind a proxy you control.
+    rate_limit_per_minute: int = 10
+    rate_limit_per_day: int = 500
+    rate_limit_trust_forwarded_for: bool = False
     app_url: str = "http://localhost:8000"
     app_name: str = "ctviz"
 

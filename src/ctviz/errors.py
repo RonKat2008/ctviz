@@ -35,6 +35,14 @@ class PlanInvalidError(CtvizError):
         self.details = details
 
 
+class RateLimitedError(CtvizError):
+    """The caller exceeded the /v1/visualize rate limit; `retry_after_s` feeds Retry-After."""
+
+    def __init__(self, retry_after_s: int) -> None:
+        super().__init__(f"Rate limit exceeded; retry in {retry_after_s} s.")
+        self.retry_after_s = retry_after_s
+
+
 class CitationCheckError(CtvizError):
     """The independent verifier found an inconsistency — a bug in our code, never user error."""
 
