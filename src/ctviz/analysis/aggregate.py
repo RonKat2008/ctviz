@@ -113,12 +113,24 @@ def count_by(
     keep, rest = (ranked[:top_n], ranked[top_n:]) if top_n else (ranked, [])
     ordered_keep = _order(keep, counts, dimension)
     buckets = [Bucket(k, predicates[k], tuple(citations[k])) for k in ordered_keep]
-    if rest:
-        other_predicate = {"not": {"any": [predicates[k] for k in keep]}}
-        other_citations = _dedupe_by_nct_id(c for k in rest for c in citations[k])
-        other = Bucket(OTHER_KEY, other_predicate, other_citations, folded_categories=len(rest))
+    other = _other_bucket(keep, rest, citations, predicates) if rest else None
+    if other is not None and other.citations:
         buckets.append(other)
     return AggregateResult(tuple(buckets), excluded)
+
+
+def _other_bucket(
+    keep: list[str],
+    rest: list[str],
+    citations: dict[str, list[Citation]],
+    predicates: dict[str, Predicate],
+) -> Bucket:
+    """PLAN.md §11.5 "Other (N)": `not(any(kept key predicates))`, citing -- once each -- only
+    trials with NO kept key (a multi-valued trial already in a kept bar is not repeated)."""
+    in_kept_bars = {c.nct_id for k in keep for c in citations[k]}
+    folded = (c for k in rest for c in citations[k] if c.nct_id not in in_kept_bars)
+    predicate: Predicate = {"not": {"any": [predicates[k] for k in keep]}}
+    return Bucket(OTHER_KEY, predicate, _dedupe_by_nct_id(folded), folded_categories=len(rest))
 
 
 def _dedupe_by_nct_id(citations: Iterable[Citation]) -> tuple[Citation, ...]:

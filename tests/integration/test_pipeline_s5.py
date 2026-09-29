@@ -73,7 +73,10 @@ def _mock_records(records: list[dict], total: int) -> None:
 async def test_pipeline_produces_a_cited_histogram_for_psoriasis_enrollment() -> None:
     records = load_fixture("psoriasis_p2")
     _mock_records(records, len(records))
-    plan = make_plan(analysis=HISTOGRAM_ANALYSIS, visualization=HISTOGRAM_VIZ)
+    # S6: the plan's default query.intr=pembrolizumab term would now be strict-matched against
+    # this psoriasis fixture; drop it so the request's own condition="Psoriasis" (lenient, §11.3)
+    # is the only search term, preserving this test's pre-S6 golden counts.
+    plan = make_plan(search_terms=[], analysis=HISTOGRAM_ANALYSIS, visualization=HISTOGRAM_VIZ)
     planner = Planner(FakeBackend(plan))
     request = VisualizeRequest(query="Enrollment distribution?", condition="Psoriasis")
 
@@ -100,7 +103,8 @@ async def test_pipeline_produces_a_cited_histogram_for_psoriasis_enrollment() ->
 async def test_pipeline_produces_a_cited_scatter_for_crohns_completed_p3() -> None:
     records = load_fixture("crohns_p3_completed")
     _mock_records(records, len(records))
-    plan = make_plan(analysis=SCATTER_ANALYSIS, visualization=SCATTER_VIZ)
+    # S6: same reasoning as the histogram test above -- drop the plan's default drug term.
+    plan = make_plan(search_terms=[], analysis=SCATTER_ANALYSIS, visualization=SCATTER_VIZ)
     planner = Planner(FakeBackend(plan))
     request = VisualizeRequest(
         query="Enrollment vs duration?", condition="Crohn's Disease", trial_phase="PHASE3"
@@ -194,7 +198,9 @@ async def test_pipeline_uses_recruiting_rule_when_status_filtered_to_recruiting(
     full pipeline, reproducing the §14 golden number US = 157 on ms_recruiting."""
     records = load_fixture("ms_recruiting")
     _mock_records(records, len(records))
+    # S6: same reasoning as the histogram test above -- drop the plan's default drug term.
     plan = make_plan(
+        search_terms=[],
         filters={
             "phases": None,
             "overall_statuses": ["RECRUITING"],
@@ -277,7 +283,8 @@ async def test_pipeline_downgrades_a_single_category_bar_chart_to_a_cited_metric
         for i in range(3)
     ]
     _mock_records(records, len(records))
-    plan = make_plan()  # default: count_by(phase) -> bar_chart
+    # S6: same reasoning as the histogram test above -- drop the plan's default drug term.
+    plan = make_plan(search_terms=[])  # count_by(phase) -> bar_chart
     planner = Planner(FakeBackend(plan))
     request = VisualizeRequest(query="Trials by phase?", condition="Glioblastoma")
 

@@ -79,6 +79,7 @@ class CitationPolicy(_Meta):
 class CitationCheck(_Meta):
     """The independent verifier's result: predicates and evidence re-checked against raw data."""
 
+    mode: Literal["full", "sample", "none"]
     passed: bool
     citations_checked: int
     evidence_checked: int

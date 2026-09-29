@@ -33,12 +33,20 @@ def _log_failure(exc: Exception, status: int) -> None:
         log.exception("Pipeline failure")
 
 
+def _details(exc: Exception) -> dict[str, object] | None:
+    """§11.6 step 6: a failed citation check ships its violations in `error.details`."""
+    if isinstance(exc, CitationCheckError):
+        return {"violations": list(exc.violations)}
+    return None
+
+
 def to_response(exc: Exception) -> tuple[int, VisualizeResponse]:
     """Map a pipeline exception to an HTTP status and a `VisualizeResponse`."""
     for exc_type, (status, code) in _STATUS_AND_CODE.items():
         if isinstance(exc, exc_type):
             _log_failure(exc, status)
-            return status, VisualizeResponse.failure(ErrorInfo(code=code, message=str(exc)))  # type: ignore[arg-type]
+            info = ErrorInfo(code=code, message=str(exc), details=_details(exc))  # type: ignore[arg-type]
+            return status, VisualizeResponse.failure(info)
     log.exception("Unmapped pipeline failure")
     return 500, VisualizeResponse.failure(
         ErrorInfo(code="INTERNAL_ERROR", message="Internal error.")

@@ -6,11 +6,11 @@ from ctviz.pipeline_meta import _CohortFetch, _entity_resolution
 from tests.fixtures.load import load_trials
 
 
-def _cohort(label: str, trials: list[MatchedTrial]) -> _CohortFetch:
+def _cohort(label: str, trials: list[MatchedTrial], aliases: tuple[str, ...] = ()) -> _CohortFetch:
     fetch = FetchResult(
         records=[], api_total_count=len(trials), truncated=False, truncation_rule=None
     )
-    return _CohortFetch(label, label, trials, fetch)
+    return _CohortFetch(label, label, trials, fetch, aliases=aliases)
 
 
 def test_entity_resolution_shape_for_the_pembrolizumab_census() -> None:
@@ -21,7 +21,7 @@ def test_entity_resolution_shape_for_the_pembrolizumab_census() -> None:
 
     resolution = _entity_resolution(cohorts)
 
-    assert set(resolution) == {"top_sponsors"}
+    assert set(resolution) == {"top_sponsors", "aliases"}
     top_sponsors = resolution["top_sponsors"]
     assert isinstance(top_sponsors, list)
     assert 1 <= len(top_sponsors) <= 10
@@ -32,3 +32,18 @@ def test_entity_resolution_shape_for_the_pembrolizumab_census() -> None:
     counts = [entry["count"] for entry in top_sponsors]
     assert counts == sorted(counts, reverse=True)
     assert len(set(counts)) > 1  # real counts, not every sponsor forced to the same number
+
+
+def test_entity_resolution_reports_each_cohorts_learned_aliases() -> None:
+    """§10.4: "Aliases are reported in meta.entity_resolution" -- per cohort, in order."""
+    cohorts = [
+        _cohort("Pembrolizumab", [], aliases=("keytruda", "mk-3475")),
+        _cohort("Nivolumab", [], aliases=("opdivo",)),
+    ]
+
+    resolution = _entity_resolution(cohorts)
+
+    assert resolution["aliases"] == {
+        "Pembrolizumab": ["keytruda", "mk-3475"],
+        "Nivolumab": ["opdivo"],
+    }

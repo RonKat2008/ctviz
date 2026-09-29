@@ -5,7 +5,7 @@ because every meta helper below is built from a `list[_CohortFetch]`; `pipeline.
 back for `_fetch_one`/`_fetch_cohorts`. `_meta` is the single entry point `run_pipeline` calls.
 """
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 
 from ctviz.agent.overlay import FieldOverride
@@ -15,6 +15,7 @@ from ctviz.analysis.entities import sponsor_ambiguity_warning, sponsor_census
 from ctviz.ctgov.client import FetchResult
 from ctviz.pipeline_analysis import AnalysisResult, excluded_of, plotted_ids
 from ctviz.pipeline_analysis import network_summary as network_summary_of
+from ctviz.schemas.citations import Predicate
 from ctviz.schemas.enums import AnalysisKind, Dimension, SearchParam
 from ctviz.schemas.plan import QueryPlan
 from ctviz.schemas.request import VisualizeRequest
@@ -36,12 +37,17 @@ CITATION_URL_TEMPLATE = "https://clinicaltrials.gov/study/{nct_id}"
 
 @dataclass(frozen=True)
 class _CohortFetch:
-    """One cohort's compiled identity, its fetched trials, and the raw `FetchResult` behind them."""
+    """One cohort's compiled identity, its KEPT (post strict-match) trials, the raw `FetchResult`
+    behind them, every trial the match/filter re-check dropped (§11.3), and the cohort's real,
+    evaluable membership rule (§11.4 item 3 -- what the S4-era placeholder predicate became)."""
 
     label: str
     value: str | None
     trials: list[MatchedTrial]
     fetch: FetchResult
+    match_excluded: list[ExcludedTrial] = field(default_factory=list)
+    base_predicate: Predicate = field(default_factory=dict)
+    aliases: tuple[str, ...] = ()
 
 
 def _records_plotted(result: AnalysisResult) -> int:
@@ -50,31 +56,37 @@ def _records_plotted(result: AnalysisResult) -> int:
 
 
 def _cohort_summary(cohort: _CohortFetch, plan: QueryPlan, result: AnalysisResult) -> CohortSummary:
-    """One cohort's identity, counts, and the predicate (search terms + filters) that define it."""
-    predicate = {
-        "search_terms": [term.model_dump(mode="json") for term in plan.search_terms],
-        "filters": plan.filters.model_dump(mode="json") if plan.filters else None,
-    }
+    """One cohort's identity, counts, and its real, evaluable membership rule (§11.4 item 3)."""
+    del plan  # kept in the signature: every other meta helper here takes (cohort, plan, result)
     return CohortSummary(
         label=cohort.label,
         value=cohort.value or cohort.label,
         api_total_count=cohort.fetch.api_total_count,
         records_matched=len(cohort.trials),
         records_plotted=_records_plotted(result),
-        base_predicate=predicate,
+        base_predicate=cohort.base_predicate,
     )
+
+
+def _reason_counts(excluded_trials: list[ExcludedTrial], stage: str) -> dict[str, int]:
+    """How many trials were excluded at `stage`, grouped by reason (§12.6)."""
+    counts: dict[str, int] = {}
+    for e in excluded_trials:
+        if e.stage == stage:
+            counts[e.reason] = counts.get(e.reason, 0) + 1
+    return counts
 
 
 def _data_coverage(cohort: _CohortFetch, result: AnalysisResult) -> DataCoverage:
     """Single-cohort coverage summary (only meaningful without a comparison, per §12.6)."""
-    excluded = excluded_of(result)
-    excluded_trials = [
-        ExcludedTrial(nct_id=nct_id, stage="analysis", reason=reason)
-        for nct_id, reason in excluded.items()
+    analysis_excluded = excluded_of(result)
+    all_excluded_trials = [
+        *cohort.match_excluded,
+        *(
+            ExcludedTrial(nct_id=nct_id, stage="analysis", reason=reason)
+            for nct_id, reason in analysis_excluded.items()
+        ),
     ]
-    reasons: dict[str, int] = {}
-    for reason in excluded.values():
-        reasons[reason] = reasons.get(reason, 0) + 1
     return DataCoverage(
         api_total_count=cohort.fetch.api_total_count,
         records_fetched=len(cohort.fetch.records),
@@ -82,8 +94,12 @@ def _data_coverage(cohort: _CohortFetch, result: AnalysisResult) -> DataCoverage
         truncation_rule=cohort.fetch.truncation_rule,
         records_matched=len(cohort.trials),
         records_plotted=_records_plotted(result),
-        excluded={"match": {}, "analysis": reasons},
-        excluded_trials=excluded_trials,
+        excluded={
+            "match": _reason_counts(all_excluded_trials, "match"),
+            "filter": _reason_counts(all_excluded_trials, "filter"),
+            "analysis": _reason_counts(all_excluded_trials, "analysis"),
+        },
+        excluded_trials=all_excluded_trials,
     )
 
 
@@ -159,9 +175,12 @@ def _entity_warnings(plan: QueryPlan, cohorts: list[_CohortFetch]) -> list[str]:
 
 
 def _entity_resolution(cohorts: list[_CohortFetch]) -> dict[str, object]:
-    """Item 5: the top-10 sponsor name census, always reported (not only when it warns)."""
+    """Item 5: the top-10 sponsor census (always), plus each cohort's co-referenced aliases."""
     census = sponsor_census([trial for c in cohorts for trial in c.trials])
-    return {"top_sponsors": [{"name": name, "count": count} for name, count in census]}
+    return {
+        "top_sponsors": [{"name": name, "count": count} for name, count in census],
+        "aliases": {c.label: list(c.aliases) for c in cohorts},
+    }
 
 
 def _empty_cohort_warnings(cohorts: list[_CohortFetch]) -> list[str]:

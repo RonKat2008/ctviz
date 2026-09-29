@@ -1,6 +1,7 @@
 """RFC 6901 JSON Pointers: how every citation addresses its evidence in a raw study record."""
 
 import json
+from functools import lru_cache
 from typing import Any
 
 PHASES = "/protocolSection/designModule/phases"
@@ -19,8 +20,11 @@ COLLABORATORS = "/protocolSection/sponsorCollaboratorsModule/collaborators"
 INTERVENTIONS = "/protocolSection/armsInterventionsModule/interventions"
 ARM_GROUPS = "/protocolSection/armsInterventionsModule/armGroups"
 CONDITIONS = "/protocolSection/conditionsModule/conditions"
+KEYWORDS = "/protocolSection/conditionsModule/keywords"
 LOCATIONS = "/protocolSection/contactsLocationsModule/locations"
 INTERVENTION_MESH = "/derivedSection/interventionBrowseModule/meshes"
+CONDITION_MESH = "/derivedSection/conditionBrowseModule/meshes"
+CONDITION_ANCESTORS = "/derivedSection/conditionBrowseModule/ancestors"
 
 
 def _escape(token: str | int) -> str:
@@ -33,15 +37,24 @@ def build_pointer(*tokens: str | int) -> str:
     return "".join(f"/{_escape(t)}" for t in tokens)
 
 
+POINTER_CACHE_SIZE = 16384
+
+
+@lru_cache(maxsize=POINTER_CACHE_SIZE)
+def _tokens(pointer: str) -> tuple[str, ...]:
+    """Split and unescape a pointer once (the verifier resolves the same few paths millions of
+    times); '~1' before '~0' so an escaped '~01' decodes to '~1', per RFC 6901."""
+    if not pointer.startswith("/"):
+        raise KeyError(f"JSON Pointer must start with '/': {pointer!r}")
+    return tuple(raw.replace("~1", "/").replace("~0", "~") for raw in pointer[1:].split("/"))
+
+
 def resolve_pointer(document: Any, pointer: str) -> Any:
     """Return the single value at `pointer`; raise KeyError/IndexError if it does not exist."""
     if pointer == "":
         return document
-    if not pointer.startswith("/"):
-        raise KeyError(f"JSON Pointer must start with '/': {pointer!r}")
     node = document
-    for raw in pointer[1:].split("/"):
-        token = raw.replace("~1", "/").replace("~0", "~")
+    for token in _tokens(pointer):
         if isinstance(node, list):
             if not token.isdigit():
                 raise KeyError(f"expected an array index, got {token!r}")

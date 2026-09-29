@@ -161,8 +161,10 @@ def _enrollment_value(trial: Trial) -> _MeasureValue | str:
     count_excerpt = json_text(trial.enrollment)
     evidence = [Evidence(role="bucket", field=ENROLLMENT_COUNT, excerpt=count_excerpt)]
     if trial.enrollment_type is not None:
+        # `context`: the type qualifies the count (§11.5 "the type is always cited") but is not
+        # what places the trial in a bin, so it isn't held to the verifier's relevance check.
         type_evidence = Evidence(
-            role="bucket", field=ENROLLMENT_TYPE, excerpt=trial.enrollment_type
+            role="context", field=ENROLLMENT_TYPE, excerpt=trial.enrollment_type
         )
         evidence.append(type_evidence)
     return _MeasureValue(float(trial.enrollment), tuple(evidence))

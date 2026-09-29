@@ -88,9 +88,11 @@ def test_histogram_citations_include_the_enrollment_type_evidence_item() -> None
     result = histogram(trials, Measure.ENROLLMENT)
 
     [citation] = [c for b in result.buckets for c in b.citations]
-    assert any(
-        item.field == ENROLLMENT_TYPE and item.excerpt == "ACTUAL" for item in citation.evidence
-    )
+    [type_item] = [item for item in citation.evidence if item.field == ENROLLMENT_TYPE]
+    assert type_item.excerpt == "ACTUAL"
+    # The type qualifies the count; it is not what places the trial in this bin (the bin's
+    # predicate reads only the count), so it is `context`, not `bucket`, evidence (§11.6 step 3).
+    assert type_item.role == "context"
 
 
 def test_histogram_bucket_actual_vs_estimated_split_is_not_swapped() -> None:

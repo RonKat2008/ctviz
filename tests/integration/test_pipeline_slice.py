@@ -166,10 +166,16 @@ async def test_cohort_api_total_count_comes_from_the_probe_not_records_fetched()
 
 @respx.mock
 async def test_excluded_trials_are_reported_for_a_missing_start_date() -> None:
-    """Item 5: a trial with no start date is excluded from a time_trend, with the reason kept."""
+    """Item 5: a trial with no start date is excluded from a time_trend, with the reason kept.
+
+    S6: the request's `drug_name="Pembrolizumab"` is now strict-matched, so both records need a
+    matching intervention or they'd be dropped at the match stage instead (a different S6 rule
+    entirely) before this test's own missing-start-date exclusion is even reached.
+    """
+    pembro_intervention = [{"type": "DRUG", "name": "Pembrolizumab"}]
     records = [
-        make_study("NCT00000001", start="2020-06-01"),
-        make_study("NCT00000002", start=None),
+        make_study("NCT00000001", start="2020-06-01", interventions=pembro_intervention),
+        make_study("NCT00000002", start=None, interventions=pembro_intervention),
     ]
     respx.get(f"{CTGOV_BASE_URL}/studies").mock(
         side_effect=[
@@ -199,11 +205,16 @@ async def test_excluded_trials_are_reported_for_a_missing_start_date() -> None:
 
 @respx.mock
 async def test_today_drives_partial_period_and_projected_flags() -> None:
-    """Item 5: the pipeline's `today` (not `date.today()`) drives partial/projected year flags."""
+    """Item 5: the pipeline's `today` (not `date.today()`) drives partial/projected year flags.
+
+    S6: `drug_name="Pembrolizumab"` is now strict-matched (see the test above for why every
+    record needs a matching intervention).
+    """
+    pembro_intervention = [{"type": "DRUG", "name": "Pembrolizumab"}]
     records = [
-        make_study("NCT00000001", start="2020-06-01"),
-        make_study("NCT00000002", start="2021-03-01"),
-        make_study("NCT00000003", start="2022-01-01"),
+        make_study("NCT00000001", start="2020-06-01", interventions=pembro_intervention),
+        make_study("NCT00000002", start="2021-03-01", interventions=pembro_intervention),
+        make_study("NCT00000003", start="2022-01-01", interventions=pembro_intervention),
     ]
     respx.get(f"{CTGOV_BASE_URL}/studies").mock(
         side_effect=[

@@ -1,8 +1,15 @@
 """Entity resolution: alias discovery, sponsor census, Q2 ambiguity warning (§10.4)."""
 
+import pytest
+
 from ctviz.analysis.aggregate import MatchedTrial
-from ctviz.analysis.entities import discover_aliases, sponsor_ambiguity_warning, sponsor_census
-from ctviz.ctgov.normalize import normalize
+from ctviz.analysis.entities import (
+    MIN_ALIAS_TRIALS,
+    discover_aliases,
+    sponsor_ambiguity_warning,
+    sponsor_census,
+)
+from ctviz.ctgov.normalize import Trial, normalize
 from tests.factories import make_study
 from tests.fixtures.load import load_trials
 
@@ -11,36 +18,96 @@ def _m(*studies: dict) -> list[MatchedTrial]:
     return [MatchedTrial(normalize(s), ()) for s in studies]
 
 
-def test_aliases_come_only_from_the_same_intervention_object() -> None:
-    trials = _m(
+def _trials(*studies: dict) -> list[Trial]:
+    return [normalize(s) for s in studies]
+
+
+def _pembro_trials(other_names: list[str], extra: list[dict] | None = None, n: int = 3) -> list:
+    """`n` trials whose pembrolizumab object lists `other_names` (+ `extra` separate objects)."""
+    return _trials(
         *[
             make_study(
                 f"NCT0000000{i}",
                 interventions=[
-                    {
-                        "type": "DRUG",
-                        "name": "Pembrolizumab",
-                        "otherNames": ["Keytruda", "MK-3475"],
-                    },
-                    {"type": "DRUG", "name": "Paclitaxel"},
+                    {"type": "DRUG", "name": "Pembrolizumab", "otherNames": other_names},
+                    *(extra or []),
+                ],
+            )
+            for i in range(n)
+        ]
+    )
+
+
+def test_aliases_come_only_from_the_same_intervention_object() -> None:
+    trials = _pembro_trials(["Keytruda", "MK-3475"], [{"type": "DRUG", "name": "Paclitaxel"}])
+
+    assert discover_aliases(trials, "Pembrolizumab") == ["keytruda", "mk-3475"]
+
+
+def test_aliases_require_at_least_three_trials() -> None:
+    trials = _pembro_trials(["Keytruda"], n=MIN_ALIAS_TRIALS - 1)
+
+    assert discover_aliases(trials, "Pembrolizumab") == []
+
+
+def test_aliases_are_learned_only_from_an_object_whose_name_contains_the_term() -> None:
+    """(a): an object named 'MK-3475' with otherNames ['Pembrolizumab', 'Keytruda'] names the
+    term only in otherNames -- its other names are not learned (the ruling narrows §10.4)."""
+    trials = _trials(
+        *[
+            make_study(
+                f"NCT0000000{i}",
+                interventions=[
+                    {"type": "DRUG", "name": "MK-3475", "otherNames": ["Pembrolizumab", "Keytruda"]}
                 ],
             )
             for i in range(3)
         ]
     )
 
-    assert discover_aliases(trials, "Keytruda") == ["mk-3475", "pembrolizumab"]
+    assert discover_aliases(trials, "Pembrolizumab") == []
 
 
-def test_aliases_require_at_least_three_trials() -> None:
-    trials = _m(
-        make_study(
-            "NCT00000001",
-            interventions=[{"type": "DRUG", "name": "Pembrolizumab", "otherNames": ["Keytruda"]}],
-        )
+def test_a_partner_drug_that_is_its_own_object_in_the_same_trial_is_never_an_alias() -> None:
+    """(c): 'Carboplatin' sits in the pembrolizumab object's otherNames in 3 trials, but one
+    trial also lists it as a SEPARATE intervention object -- a partner drug, vetoed."""
+    trials = _pembro_trials(["Keytruda", "Carboplatin"])
+    vetoing = make_study(
+        "NCT00000009",
+        interventions=[
+            {"type": "DRUG", "name": "Pembrolizumab"},
+            {"type": "DRUG", "name": "Carboplatin"},
+        ],
     )
 
-    assert discover_aliases(trials, "Keytruda") == []
+    assert discover_aliases([*trials, normalize(vetoing)], "Pembrolizumab") == ["keytruda"]
+
+
+def test_a_trial_naming_the_drug_only_by_its_alias_does_not_veto_that_alias() -> None:
+    """Ruling: the veto is scoped to trials that also carry a term-bearing object (§10.4 'in
+    the same trial'). A Keytruda-only trial is exactly what the alias exists to rescue."""
+    trials = _pembro_trials(["Keytruda"])
+    alias_only = make_study("NCT00000009", interventions=[{"type": "DRUG", "name": "Keytruda"}])
+
+    assert discover_aliases([*trials, normalize(alias_only)], "Pembrolizumab") == ["keytruda"]
+
+
+def test_an_alias_equal_to_another_cohorts_value_is_rejected() -> None:
+    trials = _pembro_trials(["Keytruda", "Nivolumab"])
+
+    assert discover_aliases(trials, "Pembrolizumab", other_cohort_values=["Nivolumab"]) == [
+        "keytruda"
+    ]
+
+
+@pytest.mark.parametrize(
+    "generic",
+    ["Placebo", "Standard of care", "Immunotherapy", "Checkpoint inhibitor", "Anti-PD-1"],
+)
+def test_placebo_soc_and_drug_class_names_are_never_aliases(generic: str) -> None:
+    trials = _pembro_trials(["Keytruda", generic])
+
+    assert discover_aliases(trials, "Pembrolizumab") == ["keytruda"]
 
 
 def test_sponsor_census_lists_distinct_names_with_counts() -> None:

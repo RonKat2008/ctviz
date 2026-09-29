@@ -135,3 +135,13 @@ def test_network_with_enough_edges_is_kept() -> None:
     viz_type, notes = apply_guards(plan, graph)
 
     assert viz_type is VizType.NETWORK_GRAPH and notes == []
+
+
+def test_degree_bar_chart_keeps_the_networks_declared_exclusions() -> None:
+    """§11.6 step 5: a downgraded network still declares every trial it dropped, so
+    records_matched - exclusions == records_plotted holds for the bar chart it becomes."""
+    graph = Graph((), (), {"excluded": {"NCT00000001": "no_edge_pair"}})
+
+    bar = graph_to_degree_bar_chart(graph)
+
+    assert bar.excluded == {"NCT00000001": "no_edge_pair"}

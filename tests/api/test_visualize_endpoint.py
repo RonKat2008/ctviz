@@ -1,6 +1,7 @@
 """API contract test: dependency-injected fake planner + respx-mocked client (no network)."""
 
 import logging
+from dataclasses import replace
 from typing import Any
 
 import httpx
@@ -9,13 +10,15 @@ import pytest
 import respx
 from fastapi.testclient import TestClient
 
+import ctviz.pipeline as pipeline_module
 from ctviz.agent.planner import CLIENT_UNAVAILABLE_MESSAGE, Planner
+from ctviz.analysis.aggregate import AggregateResult
 from ctviz.api.app import app, get_ctgov_client, get_planner
 from ctviz.api.errors import to_response
 from ctviz.config import CTGOV_BASE_URL
 from ctviz.ctgov.client import CtGovClient
 from ctviz.errors import LLMUnavailableError, OutOfScopeError, PlanInvalidError, UpstreamError
-from tests.factories import make_plan
+from tests.factories import make_plan, make_study
 from tests.fixtures.load import load_fixture
 from tests.unit.agent.test_planner import FakeBackend, _fake_backend, _FakeParse, _install
 
@@ -37,6 +40,7 @@ TIME_SERIES_VIZ = {
     "title": "Pembrolizumab trials by year",
     "rationale": "trend over time",
 }
+PEMBRO_IV = [{"type": "DRUG", "name": "Pembrolizumab"}]
 REQUEST_BODY = {
     "query": "How has the number of trials for this drug changed over time?",
     "drug_name": "Pembrolizumab",
@@ -288,3 +292,40 @@ def test_lifespan_closes_the_ctgov_client_on_shutdown() -> None:
         assert client._http.is_closed is False
 
     assert client._http.is_closed is True
+
+
+def test_a_malformed_datum_predicate_fails_closed_as_500_citation_check_failed(
+    dependency_overrides: dict, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """§11.6 step 6: a predicate the verifier can't evaluate (unknown `fn`) is a violation --
+    HTTP 500 CITATION_CHECK_FAILED with the violations in `error.details` -- never a crash."""
+    real_time_trend = pipeline_module.time_trend
+
+    def malformed(*args: Any, **kwargs: Any) -> AggregateResult:
+        result = real_time_trend(*args, **kwargs)
+        first, *rest = result.buckets
+        bad = {"op": "normalizes_to", "path": "/x", "value": "y", "fn": "no-such-fn"}
+        return AggregateResult((replace(first, predicate=bad), *rest), result.excluded)
+
+    monkeypatch.setattr(pipeline_module, "time_trend", malformed)
+    dependency_overrides[get_planner] = lambda: Planner(FakeBackend(_plan()))
+    studies = [
+        make_study(f"NCT0000000{i}", start=f"20{10 + i}-01", interventions=PEMBRO_IV)
+        for i in range(1, 4)
+    ]
+
+    with respx.mock:
+        respx.get(f"{CTGOV_BASE_URL}/studies").mock(
+            side_effect=[
+                httpx.Response(200, json={"totalCount": 3, "studies": []}),
+                httpx.Response(200, json={"totalCount": 3, "studies": studies}),
+            ]
+        )
+        with TestClient(app, raise_server_exceptions=False) as test_client:
+            response = test_client.post("/v1/visualize", json=REQUEST_BODY)
+
+    body = response.json()
+    assert response.status_code == 500
+    assert body["error"]["code"] == "CITATION_CHECK_FAILED"
+    violations = body["error"]["details"]["violations"]
+    assert any(v.startswith("predicate:") and "unknown normalizes_to fn" in v for v in violations)

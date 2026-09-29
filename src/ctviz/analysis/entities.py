@@ -1,11 +1,23 @@
 """Entity resolution: alias discovery by co-reference and the sponsor name census (§10.4)."""
 
-from collections import Counter
+import re
+from collections import Counter, defaultdict
+from collections.abc import Sequence
+from dataclasses import dataclass
 
 from ctviz.analysis.aggregate import MatchedTrial
-from ctviz.common.names import normalize_text, text_matches
+from ctviz.common.names import normalize_text
+from ctviz.ctgov.normalize import Intervention, Trial
 
 MIN_ALIAS_TRIALS = 3
+# Placebo / standard-of-care and drug-CLASS descriptors: never a synonym of one specific drug,
+# however often they co-occur with it (an otherNames "Checkpoint inhibitor" would otherwise
+# match every other PD-1 antibody trial as if it were the searched drug).
+GENERIC_NAME_PATTERN = re.compile(
+    r"placebo|standard of care|best supportive care|\bsoc\b|saline|vehicle"
+    r"|inhibitor|immunotherap|chemotherap|antibod|immunoglobulin|checkpoint|\banti-",
+    re.IGNORECASE,
+)
 # Q2 = a (PLAN.md §22): known distinct organizations that share a search term, each mapped to
 # the lowercase name substrings that identify it in a sponsor name. Item 5 ruling: the warning
 # fires only when >= 2 of these DISTINCT ORGS actually appear in the cohort's sponsor census --
@@ -19,19 +31,62 @@ KNOWN_DISTINCT_ORGS: dict[str, dict[str, tuple[str, ...]]] = {
 }
 
 
-def discover_aliases(trials: list[MatchedTrial], term: str) -> list[str]:
-    """Alias candidates by co-reference: names sharing an intervention object with `term`, seen
-    in >= MIN_ALIAS_TRIALS trials (never a name that is its own separate intervention, §10.4)."""
+@dataclass(frozen=True)
+class _AliasEvidence:
+    """Per-candidate co-reference trial ids, plus every name vetoed as a separate object."""
+
+    coreferenced: dict[str, frozenset[str]]
+    vetoed: frozenset[str]
+
+
+def _names_of(iv: Intervention) -> tuple[str, ...]:
+    return tuple(normalize_text(n) for n in (iv.name, *iv.other_names))
+
+
+def _trial_alias_evidence(trial: Trial, term_key: str) -> tuple[set[str], set[str]]:
+    """(a) this trial's candidates and (c) its vetoes; both empty unless some object's NAME
+    contains the term (the same trials (a) learns from -- see the scope ruling below)."""
+    named = [iv for iv in trial.interventions if term_key in normalize_text(iv.name)]
+    if not named:
+        return set(), set()
+    bearing = [iv for iv in trial.interventions if any(term_key in n for n in _names_of(iv))]
+    candidates = {key for iv in named for key in _names_of(iv)[1:] if term_key not in key}
+    vetoed = {key for iv in trial.interventions if iv not in bearing for key in _names_of(iv)}
+    return candidates, vetoed
+
+
+def _collect(trials: Sequence[Trial], term_key: str) -> _AliasEvidence:
+    """One pass: which trials co-reference each candidate, and which names are ever vetoed."""
+    seen: dict[str, set[str]] = defaultdict(set)
+    vetoed: set[str] = set()
+    for trial in trials:
+        candidates, trial_vetoes = _trial_alias_evidence(trial, term_key)
+        for key in candidates:
+            seen[key].add(trial.nct_id)
+        vetoed |= trial_vetoes
+    return _AliasEvidence({k: frozenset(v) for k, v in seen.items()}, frozenset(vetoed))
+
+
+def _acceptable(key: str, evidence: _AliasEvidence, rivals: Sequence[str]) -> bool:
+    """(b) >= MIN_ALIAS_TRIALS trials, (c) never vetoed, never generic, never a rival cohort."""
+    return (
+        len(evidence.coreferenced[key]) >= MIN_ALIAS_TRIALS
+        and key not in evidence.vetoed
+        and not GENERIC_NAME_PATTERN.search(key)
+        and not any(rival in key for rival in rivals)
+    )
+
+
+def discover_aliases(
+    trials: Sequence[Trial], term: str, other_cohort_values: Sequence[str] = ()
+) -> list[str]:
+    """Co-referenced aliases of `term` (§10.4): otherNames of an object whose NAME contains the
+    term, seen in >= 3 trials, never a separate object beside a term-bearing one, never a
+    placebo/SOC/drug-class name, never (containing) another compared cohort's value."""
     term_key = normalize_text(term)
-    counts: Counter[str] = Counter()
-    for matched in trials:
-        for iv in matched.trial.interventions:
-            names = [iv.name, *iv.other_names]
-            if not text_matches(names, term):
-                continue
-            keys = {normalize_text(n) for n in names} - {term_key}
-            counts.update(keys)
-    return sorted(key for key, n in counts.items() if n >= MIN_ALIAS_TRIALS)
+    rivals = [r for r in (normalize_text(v) for v in other_cohort_values) if r and r != term_key]
+    evidence = _collect(trials, term_key)
+    return sorted(key for key in evidence.coreferenced if _acceptable(key, evidence, rivals))
 
 
 def sponsor_census(trials: list[MatchedTrial], top: int = 10) -> list[tuple[str, int]]:

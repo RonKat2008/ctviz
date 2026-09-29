@@ -50,7 +50,8 @@ def graph_to_degree_bar_chart(graph: Graph) -> AggregateResult:
     """§10.6: a persistently sparse network (< 2 edges even at min_weight=1) becomes a bar chart
     of node degrees, largest first; every row keeps the node's own citations (still cited)."""
     ranked = sorted(graph.nodes, key=lambda n: (-n.weight, n.label))
-    return AggregateResult(tuple(_node_degree_bucket(n) for n in ranked), {})
+    excluded = dict(graph.summary.get("excluded", {}))  # still declared, never silently dropped
+    return AggregateResult(tuple(_node_degree_bucket(n) for n in ranked), excluded)
 
 
 def _apply_graph_guard(plan: QueryPlan, graph: Graph) -> tuple[VizType, list[str]]:

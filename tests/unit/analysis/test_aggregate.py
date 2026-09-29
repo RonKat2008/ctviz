@@ -52,10 +52,12 @@ def test_other_row_never_double_cites_a_trial_that_folds_into_two_multi_valued_k
         make_study(
             "NCT00000001",
             locations=[{"country": "Andorra"}, {"country": "Monaco"}, {"country": "Fiji"}],
-        )
+        ),
+        make_study("NCT00000002", locations=[{"country": "Japan"}]),
+        make_study("NCT00000003", locations=[{"country": "Japan"}]),
     )
 
-    result = count_by(trials, Dimension.COUNTRY, top_n=1)
+    result = count_by(trials, Dimension.COUNTRY, top_n=1)  # keeps Japan
 
     other = next(b for b in result.buckets if b.key == "Other")
     ids = [c.nct_id for c in other.citations]
@@ -77,13 +79,46 @@ def test_citation_for_multiphase_trial_carries_extra_bucket_and_match_evidence()
     assert match_evidence[0] in citation.evidence
 
 
-def test_other_row_predicate_is_negation_of_kept_predicates() -> None:
+def test_other_row_predicate_is_not_any_of_the_kept_predicates() -> None:
+    """PLAN.md §11.5: the "Other (N)" row is `not(any(key_pred for key in top_n))`."""
     trials = _matched(*[make_study(f"NCT0000000{i}", sponsor=f"Sponsor {i}") for i in range(5)])
+
+    full = count_by(trials, Dimension.LEAD_SPONSOR)  # no top_n: every key kept, in rank order
+    kept_predicates = [b.predicate for b in full.buckets[:3]]  # the 3 that top_n=3 keeps
 
     result = count_by(trials, Dimension.LEAD_SPONSOR, top_n=3)
 
-    kept_predicates = [b.predicate for b in result.buckets[:-1]]
     assert result.buckets[-1].predicate == {"not": {"any": kept_predicates}}
+
+
+def test_other_row_cites_only_trials_with_no_kept_key() -> None:
+    """Multi-valued: a trial in a kept country bar is NOT also cited in Other, even if another
+    of its sites is in a rolled-up country; a trial whose every country rolls up is cited once."""
+    trials = _matched(
+        make_study("NCT00000001", locations=[{"country": "Japan"}, {"country": "Fiji"}]),
+        make_study("NCT00000002", locations=[{"country": "Japan"}]),
+        make_study("NCT00000003", locations=[{"country": "Fiji"}, {"country": "Monaco"}]),
+        make_study("NCT00000004", locations=[{"country": "Japan"}]),
+    )
+
+    result = count_by(trials, Dimension.COUNTRY, top_n=1)  # keeps Japan (3 trials)
+
+    japan, other = result.buckets
+    assert japan.key == "Japan"
+    assert [c.nct_id for c in other.citations] == ["NCT00000003"]
+    assert not {c.nct_id for c in other.citations} & {c.nct_id for c in japan.citations}
+
+
+def test_no_other_row_when_every_folded_trial_is_already_in_a_kept_bar() -> None:
+    """An empty "Other" would be a zero datum with no witnesses: it is simply not emitted."""
+    trials = _matched(
+        make_study("NCT00000001", locations=[{"country": "Japan"}, {"country": "Fiji"}]),
+        make_study("NCT00000002", locations=[{"country": "Japan"}]),
+    )
+
+    result = count_by(trials, Dimension.COUNTRY, top_n=1)
+
+    assert [b.key for b in result.buckets] == ["Japan"]
 
 
 def test_phase_buckets_are_ordered_by_display_order_regardless_of_counts() -> None:
