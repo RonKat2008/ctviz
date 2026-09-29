@@ -5,6 +5,7 @@ import pytest
 from ctviz.analysis.aggregate import MatchedTrial
 from ctviz.analysis.entities import (
     MIN_ALIAS_TRIALS,
+    VETO_OVERRIDE_RATIO,
     discover_aliases,
     sponsor_ambiguity_warning,
     sponsor_census,
@@ -50,9 +51,9 @@ def test_aliases_require_at_least_three_trials() -> None:
     assert discover_aliases(trials, "Pembrolizumab") == []
 
 
-def test_aliases_are_learned_only_from_an_object_whose_name_contains_the_term() -> None:
-    """(a): an object named 'MK-3475' with otherNames ['Pembrolizumab', 'Keytruda'] names the
-    term only in otherNames -- its other names are not learned (the ruling narrows §10.4)."""
+def test_an_object_listing_the_term_in_other_names_teaches_its_other_names() -> None:
+    """Fix A (live "Keytruda" query): an object NAMED 'MK-3475' listing 'Pembrolizumab' in its
+    otherNames co-references the term too -- its name and its other otherNames are learned."""
     trials = _trials(
         *[
             make_study(
@@ -65,7 +66,24 @@ def test_aliases_are_learned_only_from_an_object_whose_name_contains_the_term() 
         ]
     )
 
-    assert discover_aliases(trials, "Pembrolizumab") == []
+    assert discover_aliases(trials, "Pembrolizumab") == ["keytruda", "mk-3475"]
+
+
+def test_a_brand_term_learns_the_generic_name_it_is_listed_under() -> None:
+    """Fix A: term 'Keytruda' sits in the pembrolizumab object's otherNames -> 'pembrolizumab'
+    (the object's NAME) is a candidate; a separate partner object in those trials is vetoed."""
+    trials = _pembro_trials(["Keytruda", "MK-3475"], [{"type": "DRUG", "name": "Paclitaxel"}])
+
+    assert discover_aliases(trials, "Keytruda") == ["mk-3475", "pembrolizumab"]
+
+
+def test_a_bidirectional_candidate_still_respects_the_rival_and_generic_guards() -> None:
+    """Fix A keeps every guard: another cohort's value and drug-class names are never learned."""
+    trials = _pembro_trials(["Keytruda", "Nivolumab", "Anti-PD-1"])
+
+    assert discover_aliases(trials, "Keytruda", other_cohort_values=["Nivolumab"]) == [
+        "pembrolizumab"
+    ]
 
 
 def test_a_partner_drug_that_is_its_own_object_in_the_same_trial_is_never_an_alias() -> None:
@@ -90,6 +108,29 @@ def test_a_trial_naming_the_drug_only_by_its_alias_does_not_veto_that_alias() ->
     alias_only = make_study("NCT00000009", interventions=[{"type": "DRUG", "name": "Keytruda"}])
 
     assert discover_aliases([*trials, normalize(alias_only)], "Pembrolizumab") == ["keytruda"]
+
+
+@pytest.mark.parametrize(("vetoes", "learned"), [(1, True), (2, False)])
+def test_a_rare_veto_is_overridden_only_by_overwhelming_co_reference(
+    vetoes: int, learned: bool
+) -> None:
+    """Fix A ruling: a generic co-referenced in > VETO_OVERRIDE_RATIO x its veto trials (a
+    biosimilar-vs-reference trial listing it beside the brand) survives; otherwise vetoed."""
+    trials = _pembro_trials(["Keytruda"], n=VETO_OVERRIDE_RATIO + 1)
+    vetoing = [
+        make_study(
+            f"NCT0900000{i}",
+            interventions=[
+                {"type": "DRUG", "name": "Keytruda"},
+                {"type": "DRUG", "name": "Pembrolizumab"},
+            ],
+        )
+        for i in range(vetoes)
+    ]
+
+    aliases = discover_aliases([*trials, *_trials(*vetoing)], "Keytruda")
+
+    assert ("pembrolizumab" in aliases) is learned
 
 
 def test_an_alias_equal_to_another_cohorts_value_is_rejected() -> None:

@@ -1,6 +1,7 @@
 """Aggregates → visualization models. Deterministic; the only text from the LLM is the title."""
 
 from ctviz.analysis.aggregate import AggregateResult, Bucket
+from ctviz.analysis.key_facts import KEY_FACT_COLUMNS, LIST_FACTS, column_of
 from ctviz.analysis.network import Graph
 from ctviz.analysis.numeric import Point
 from ctviz.schemas.enums import Measure, NetworkType
@@ -183,6 +184,38 @@ def build_table(title: str, dimension_label: str, result: AggregateResult) -> Ta
         ),
     }
     data = [_row(b, category=b.key) for b in result.buckets]
+    return Table(type="table", title=title, encoding=encoding, data=data)
+
+
+_LIST_COLUMNS = frozenset(column for column, _, _ in LIST_FACTS)
+
+
+def _key_facts_row(bucket: Bucket) -> Row:
+    """One trial's row: each cell's cited text (lists for list facts) plus its pointers."""
+    [citation] = bucket.citations
+    values: dict[str, list[str]] = {}
+    fields: dict[str, list[str]] = {}
+    for e in citation.evidence:
+        column = column_of(e.field)
+        if column is not None:
+            values.setdefault(column, []).append(e.excerpt)
+            fields.setdefault(column, []).append(e.field)
+    cells = {c: v if c in _LIST_COLUMNS else v[0] for c, v in values.items()}
+    return {**_row(bucket, nct_id=bucket.key), **cells, "cell_fields": fields}
+
+
+def build_key_facts_table(title: str, result: AggregateResult) -> Table:
+    """§8.4: one row of key facts per trial; every cell's text is a cited raw excerpt."""
+    encoding = {"nct_id": Channel(field="nct_id", type="nominal", title="NCT ID")}
+    for column in KEY_FACT_COLUMNS:
+        title_text = column.replace("_", " ").capitalize()
+        encoding[column] = Channel(
+            field=column,
+            type="nominal",
+            title=title_text,
+            unit="participants" if column == "enrollment" else None,
+        )
+    data = [_key_facts_row(b) for b in result.buckets]
     return Table(type="table", title=title, encoding=encoding, data=data)
 
 

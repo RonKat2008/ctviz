@@ -1,13 +1,19 @@
-"""Prompt assembly for the OpenAI planner (PLAN.md §8.2).
+"""Prompt assembly for the OpenAI planner (PLAN.md §8.2) and the OpenRouter judge (§9.2-9.3).
 
 The system prompt is a static, cacheable prefix (role + catalog + rules + few-shots) so OpenAI's
 prompt caching applies across requests. The user prompt is the only dynamic part: the question,
 the *names* of structured fields present (never their values -- those are applied by the
-overlay, not the LLM), today's date, and any revise feedback.
+overlay, not the LLM), today's date, and any revise feedback plus the previous plan. That
+"previous plan" is always the planner's OWN prior raw output (before `apply_overlay` writes a
+structured field's value into one of its slots) -- §8.2 is absolute: the planner never sees a
+structured field's value, on the first call or on revise.
 """
 
+import json
 from datetime import date
+from typing import Any
 
+from ctviz.agent.overlay import FieldOverride
 from ctviz.catalog.loader import Catalog
 from ctviz.schemas.plan import QueryPlan
 from ctviz.schemas.request import VisualizeRequest
@@ -44,6 +50,9 @@ FEW_SHOT_EXAMPLES = """Examples:
 7. "Which drug is more effective for lung cancer?" -> answerable=false (efficacy ranking is
    out of scope; this API has no outcomes data)."""
 
+FEEDBACK_LINE_MAX_CHARS = 300
+FEEDBACK_MAX_LINES = 12
+
 _STRUCTURED_FIELDS = (
     "drug_name",
     "condition",
@@ -70,13 +79,32 @@ def _structured_field_names(request: VisualizeRequest) -> list[str]:
     return [name for name in _STRUCTURED_FIELDS if getattr(request, name) is not None]
 
 
+def one_line(text: str, cap: int) -> str:
+    """`text` with every line break/run of whitespace collapsed to one space, cut to `cap`."""
+    flat = " ".join(text.split())
+    return flat if len(flat) <= cap else flat[: cap - 1] + "\u2026"
+
+
+def _compact_plan(plan: QueryPlan) -> str:
+    """The previous plan as one line of JSON (null slots dropped), so feedback paths resolve."""
+    dumped = plan.model_dump(mode="json", exclude_none=True)
+    return json.dumps(dumped, separators=(",", ":"), sort_keys=True, ensure_ascii=False)
+
+
 def _feedback_block(feedback: list[str] | None, previous: QueryPlan | None) -> str:
-    """The revise block: the previous interpretation plus every check/probe/judge issue."""
+    """The revise block (§8.2): every check/probe/judge issue as one capped line (fix F: LLM-
+    authored text can't inject prompt lines), at most FEEDBACK_MAX_LINES, then the previous plan."""
     if not feedback:
         return ""
-    lines = ["Revise your previous plan. Issues:"] + [f"- {issue}" for issue in feedback]
+    shown = [f"- {one_line(issue, FEEDBACK_LINE_MAX_CHARS)}" for issue in feedback]
+    lines = ["Revise your previous plan. Issues:", *shown[:FEEDBACK_MAX_LINES]]
+    if len(shown) > FEEDBACK_MAX_LINES:
+        lines.append(f"({len(shown) - FEEDBACK_MAX_LINES} more issue(s) omitted)")
     if previous is not None:
-        lines.append(f"Previous interpretation: {previous.interpretation}")
+        lines.append(
+            f"Previous interpretation: {one_line(previous.interpretation, FEEDBACK_LINE_MAX_CHARS)}"
+        )
+        lines.append(f"Previous plan: {_compact_plan(previous)}")
     return "\n".join(lines)
 
 
@@ -97,3 +125,72 @@ def build_planner_user(
     if feedback_block:
         lines.append(feedback_block)
     return "\n".join(lines)
+
+
+JUDGE_ROLE = (
+    "You review a QueryPlan that another model wrote for a clinical-trial question. You never "
+    "see data; you check that the plan asks ClinicalTrials.gov the question the user asked."
+)
+
+JUDGE_RUBRIC = """Rubric -- answer every one of these seven checks, always, each with a short quote
+(from the question, the structured fields, the plan or the probe totals) as evidence:
+1. filter_fidelity: every entity in the question is mapped to the right param (drug -> query.intr,
+   condition -> query.cond, "run by X" -> query.lead, "involving X" -> query.spons). The probe
+   totals are evidence: a drug searched as a condition usually returns 0 or a tiny count.
+2. no_invented_filters: every filter traces back to the question or the structured fields.
+3. dimension_match: the group-by is what the user asked to break down or compare by.
+4. viz_fit: the chart suits the analysis (trend -> time series; relationships -> network;
+   distribution of a numeric -> histogram).
+5. time_range: "since 2015" -> start_year_min=2015, unless a field override shows a structured
+   field set it. "Recent" -> a stated default in assumptions.
+6. comparison_cohorts: "A vs B" varies exactly the right param with the right values.
+7. ambiguity_handled: real ambiguities are resolved and stated in assumptions. A documented
+   substitution (e.g. an unsupported network type replaced by a supported one) passes."""
+
+JUDGE_OUTPUT_RULES = """Output rules:
+- Structured fields and field overrides are authoritative: they were applied by code on the
+  user's explicit instruction. Never raise an issue against a slot they filled.
+- Each issue names its plan_path (e.g. "search_terms[0].param") and a concrete suggested_fix
+  (e.g. 'set search_terms[0].param = "query.intr"').
+- severity: critical = the chart would answer a different question (wrong entity or param, an
+  invented filter that removes trials); major = a materially wrong dimension, chart, time range
+  or cohort; minor = wording or a harmless choice.
+- Do not flag style, titles or phrasing as critical or major."""
+
+
+def build_judge_system(catalog: Catalog) -> str:
+    """The static judge system prompt: role, the §9.3 rubric, output rules, catalog summary."""
+    return "\n\n".join([JUDGE_ROLE, JUDGE_RUBRIC, JUDGE_OUTPUT_RULES, catalog.render_for_planner()])
+
+
+def _structured_values(request: VisualizeRequest) -> dict[str, Any]:
+    """The structured fields the caller supplied (the judge, unlike the planner, sees values)."""
+    values = {name: getattr(request, name) for name in _STRUCTURED_FIELDS}
+    present = {name: value for name, value in values.items() if value is not None}
+    if request.sponsor is not None:
+        present["sponsor_role"] = request.sponsor_role
+    return present
+
+
+def _as_json(value: Any) -> str:
+    """Stable, readable JSON for a prompt section."""
+    return json.dumps(value, indent=2, sort_keys=True, default=str)
+
+
+def build_judge_user(
+    request: VisualizeRequest,
+    plan: QueryPlan,
+    overrides: list[FieldOverride],
+    probe_totals: dict[str, int],
+    today: date,
+) -> str:
+    """The dynamic judge prompt: the verbatim question, fields, overrides, probe totals, plan."""
+    sections = [
+        f"Question (verbatim): {request.query}",
+        f"Structured fields (authoritative):\n{_as_json(_structured_values(request))}",
+        f"Field overrides (authoritative):\n{_as_json([o.model_dump() for o in overrides])}",
+        f"Probe totals (trials per cohort):\n{_as_json(probe_totals)}",
+        f"Today's date: {today.isoformat()}",
+        f"QueryPlan:\n{_as_json(plan.model_dump(mode='json'))}",
+    ]
+    return "\n\n".join(sections)

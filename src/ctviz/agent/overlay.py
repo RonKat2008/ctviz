@@ -190,3 +190,20 @@ def apply_overlay(
     with_top_n, top_n_overrides = _apply_top_n_override(with_filters, request)
     overrides = [*term_overrides, *comparison_overrides, *filter_overrides, *top_n_overrides]
     return with_top_n, overrides
+
+
+def structured_slots(plan: QueryPlan, request: VisualizeRequest) -> frozenset[str]:
+    """Plan paths filled from a structured field -- authoritative, so the judge can't dispute them.
+
+    Derived from the request, never from a term's `source` label (the LLM could forge that): the
+    overlay removes every planner term on a structured param, so any term on one is the field's.
+    """
+    params = {param for param, _ in _search_term_additions(request)}
+    terms = {f"search_terms[{i}]" for i, t in enumerate(plan.search_terms) if t.param in params}
+    filters = {
+        f"filters.{filt_field}"
+        for field, filt_field, _ in _FILTER_SLOTS
+        if getattr(request, field) is not None
+    }
+    top_n = {"analysis.top_n"} if request.options.top_n is not None else set()
+    return frozenset(terms | filters | top_n)

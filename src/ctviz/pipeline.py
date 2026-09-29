@@ -1,4 +1,4 @@
-"""request -> plan -> fetch per cohort -> strict match -> aggregate + cite -> verify -> spec.
+"""request -> revise loop -> fetch per cohort -> strict match -> aggregate + cite -> verify -> spec.
 
 Each pipeline step is a small, named helper so the top-level function reads like the
 architecture diagram (PLAN.md §4.1). Response `meta` assembly lives in `pipeline_meta.py` and the
@@ -12,7 +12,8 @@ import logging
 from collections.abc import Callable
 from datetime import date
 
-from ctviz.agent.overlay import apply_overlay
+from ctviz.agent.judge import Judge
+from ctviz.agent.orchestrator import PlanningOutcome, orchestrate
 from ctviz.agent.planner import Planner
 from ctviz.analysis.aggregate import MatchedTrial, count_by, time_trend
 from ctviz.analysis.dimensions import DimensionHit, country_extractor
@@ -40,17 +41,30 @@ from ctviz.schemas.response import ErrorInfo, VisualizeResponse
 log = logging.getLogger(__name__)
 
 
-def _out_of_scope(plan: QueryPlan) -> VisualizeResponse:
+OUT_OF_SCOPE_MESSAGE = "This question is out of scope for ClinicalTrials.gov data."
+
+
+def _out_of_scope(plan: QueryPlan | None) -> VisualizeResponse:
     """ok:false OUT_OF_SCOPE when the planner marks the question unanswerable (§12.2)."""
-    reason = (
-        plan.out_of_scope_reason or "This question is out of scope for ClinicalTrials.gov data."
-    )
-    details = (
-        {"suggested_reframing": plan.suggested_reframing} if plan.suggested_reframing else None
-    )
+    reason = (plan.out_of_scope_reason if plan else None) or OUT_OF_SCOPE_MESSAGE
+    reframing = plan.suggested_reframing if plan else None
+    details = {"suggested_reframing": reframing} if reframing else None
     return VisualizeResponse.failure(
         ErrorInfo(code="OUT_OF_SCOPE", message=reason, details=details)
     )
+
+
+def _planning_failure(outcome: PlanningOutcome) -> VisualizeResponse:
+    """The revise loop's ok:false endings (§9.4, §12.2). PLAN_INVALID is raised (api/errors.py
+    maps it); OUT_OF_SCOPE and NO_MATCHING_TRIALS carry details, so they are built here."""
+    if outcome.error_code == "PLAN_INVALID":
+        raise PlanInvalidError(outcome.errors)
+    if outcome.error_code == "NO_MATCHING_TRIALS":
+        info = ErrorInfo(
+            code="NO_MATCHING_TRIALS", message=outcome.message, details=outcome.details
+        )
+        return VisualizeResponse.failure(info)
+    return _out_of_scope(outcome.plan)
 
 
 def _cohort_search_terms(plan: QueryPlan, spec: RequestSpec) -> list[SearchTerm]:
@@ -223,13 +237,19 @@ def _verify_and_attach(
 
 
 async def run_pipeline(
-    request: VisualizeRequest, *, planner: Planner, client: CtGovClient, today: date
+    request: VisualizeRequest,
+    *,
+    planner: Planner,
+    client: CtGovClient,
+    today: date,
+    judge: Judge | None = None,
 ) -> VisualizeResponse:
-    """request -> plan -> fetch per cohort -> normalize -> aggregate + cite -> verify -> spec."""
-    raw_plan = await asyncio.to_thread(planner.plan, request, today=today)
-    plan, overrides = apply_overlay(raw_plan, request)
-    if not plan.answerable:
-        return _out_of_scope(plan)
+    """request -> revise loop (plan, checks, probe, judge) -> fetch per cohort -> normalize ->
+    aggregate + cite -> verify -> spec. No `judge` means "unavailable": the loop fails open."""
+    outcome = await orchestrate(request, planner=planner, judge=judge, client=client, today=today)
+    if outcome.plan is None or outcome.error_code is not None:
+        return _planning_failure(outcome)
+    plan = outcome.plan
     cohorts = await _fetch_cohorts(
         compile_plan(plan), client, request.options.max_records, plan, request.options
     )
@@ -239,6 +259,6 @@ async def run_pipeline(
     }
     plan, results, adjustments = apply_viz_guards(plan, results)
     visualization = build_visualization(plan, results, _resolve_title(plan, cohorts))
-    meta = _meta(plan, overrides, cohorts, results, request, planner, adjustments)
+    meta = _meta(plan, outcome, cohorts, results, request, planner, adjustments)
     response = VisualizeResponse(ok=True, visualization=visualization, meta=meta, error=None)
     return _verify_and_attach(response, cohorts, results)

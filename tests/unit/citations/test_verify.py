@@ -1,26 +1,61 @@
 """Independent verifier (§11.6, §11.9): a clean pipeline response passes, and each deliberate
 corruption -- changing exactly one thing -- is caught by the SPECIFIC check meant to catch it."""
 
+import asyncio
 import subprocess
 import sys
 from dataclasses import replace
+from datetime import date
 
+import httpx
+import respx
+
+from ctviz.agent.planner import Planner
 from ctviz.citations.verify import verify_response
+from ctviz.config import CTGOV_BASE_URL
+from ctviz.ctgov.client import CtGovClient
+from ctviz.pipeline import run_pipeline
 from ctviz.schemas.citations import Evidence
-from ctviz.schemas.response import ExcludedTrial
+from ctviz.schemas.request import VisualizeRequest
+from ctviz.schemas.response import ExcludedTrial, VisualizeResponse
 from tests.factories import make_plan, make_study
+from tests.unit.agent.test_planner import FakeBackend
 from tests.unit.citations.conftest import (
     PEMBRO,
     build_small_response,
     replace_row,
     row,
     run_small,
+    single_cohort_populations,
     tags_of,
     violations_of,
     with_rows,
 )
 
 PHASES = "/protocolSection/designModule/phases"
+FAST_PATH_TODAY = date(2026, 9, 28)
+
+
+def _run_fast_path_lookup(study: dict) -> VisualizeResponse:
+    """A real pipeline run of the §8.4 NCT fast path (no planner/judge call): one key-facts
+    table row, every cell cited."""
+
+    nct_id = study["protocolSection"]["identificationModule"]["nctId"]
+
+    async def _run() -> VisualizeResponse:
+        async with CtGovClient() as client:
+            return await run_pipeline(
+                VisualizeRequest(query=f"How many participants in {nct_id}?"),
+                planner=Planner(FakeBackend(make_plan())),
+                client=client,
+                today=FAST_PATH_TODAY,
+            )
+
+    with respx.mock:
+        respx.get(f"{CTGOV_BASE_URL}/studies").mock(
+            return_value=httpx.Response(200, json={"totalCount": 1, "studies": [study]})
+        )
+        return asyncio.run(_run())
 
 
 def test_verifier_never_imports_the_counting_code() -> None:
@@ -273,3 +308,33 @@ def test_data_coverage_that_disagrees_with_the_declared_exclusions_is_a_structur
     assert violations == [
         "structure: data_coverage analysis exclusions differ from the declared exclusions"
     ]
+
+
+def test_key_facts_table_with_untouched_cells_passes() -> None:
+    """Baseline: a real fast-path key-facts table, forged nowhere, verifies clean."""
+    study = make_study("NCT04368728", enrollment=47079, conditions=["COVID-19"], phases=["PHASE3"])
+    response = _run_fast_path_lookup(study)
+    raw_by_id = {"NCT04368728": study}
+    populations = single_cohort_populations(response, raw_by_id)
+
+    check = verify_response(response, raw_by_id, populations)
+
+    assert check.passed is True
+
+
+def test_forged_displayed_cell_is_a_display_violation() -> None:
+    """The enrollment cell is forged (47079 -> 99999) while its citation excerpt is left
+    untouched -- only a check on the DISPLAYED value (not just the excerpt) catches this."""
+    study = make_study("NCT04368728", enrollment=47079, conditions=["COVID-19"], phases=["PHASE3"])
+    response = _run_fast_path_lookup(study)
+    raw_by_id = {"NCT04368728": study}
+    populations = single_cohort_populations(response, raw_by_id)
+    [clean_row] = response.visualization.data
+    assert clean_row["enrollment"] == "47079"
+    forged = with_rows(response, [{**clean_row, "enrollment": "99999"}])
+
+    violations = violations_of(forged, raw_by_id, populations)
+
+    assert tags_of(violations) == {"display"}
+    assert "enrollment" in violations[0]
+    assert "99999" in violations[0] and "47079" in violations[0]

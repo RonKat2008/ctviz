@@ -1,6 +1,6 @@
 """Which `fields=` pieces each analysis needs. The API projects leaf fields only (PLAN.md §5.5)."""
 
-from ctviz.schemas.enums import Dimension, Measure, NetworkType, SearchParam
+from ctviz.schemas.enums import AnalysisKind, Dimension, Measure, NetworkType, SearchParam
 from ctviz.schemas.plan import QueryPlan
 
 ALWAYS = (
@@ -56,6 +56,16 @@ FOR_MATCH: dict[SearchParam, tuple[str, ...]] = {
     SearchParam.COND: ("Condition", "Keyword", "ConditionMeshTerm", "ConditionAncestorTerm"),
 }
 FOR_FILTER = ("Phase", "LeadSponsorClass", "InterventionType", "LocationCountry")
+# §8.4 / fix G: every key fact the trial_lookup table cites.
+FOR_KEY_FACTS = (
+    "Phase",
+    "CompletionDate",
+    "EnrollmentCount",
+    "EnrollmentType",
+    "LeadSponsorName",
+    "Condition",
+    "InterventionName",
+)
 
 
 def fields_for_plan(plan: QueryPlan) -> list[str]:
@@ -68,6 +78,7 @@ def fields_for_plan(plan: QueryPlan) -> list[str]:
         for measure in (analysis.measure_x, analysis.measure_y):
             pieces += FOR_MEASURE.get(measure, ()) if measure else ()
         pieces += FOR_NETWORK.get(analysis.network_type, ()) if analysis.network_type else ()
+        pieces += FOR_KEY_FACTS if analysis.kind is AnalysisKind.TRIAL_LOOKUP else ()
     params = [t.param for t in plan.search_terms]
     params += [plan.comparison.vary_param] if plan.comparison else []
     for param in params:

@@ -13,6 +13,7 @@ from ctviz.citations.predicates import referenced_paths
 from ctviz.citations.verify_data import (
     COMPLETENESS,
     COUNT,
+    DISPLAY,
     POINTER,
     PREDICATE,
     RELEVANCE,
@@ -57,6 +58,69 @@ def check_pointers(raw_by_id: RawById, data: list[Datum]) -> tuple[list[str], in
             found += [v for f, x in items if (v := _check_field(datum.label, c.nct_id, f, x, raw))]
             checked += len(items)
     return found, checked
+
+
+def _cited_excerpts(citations: tuple[Citation, ...]) -> dict[str, str]:
+    """field pointer -> excerpt, over every citation's own field/excerpt plus its evidence."""
+    excerpts: dict[str, str] = {}
+    for c in citations:
+        excerpts.setdefault(c.field, c.excerpt)
+        for e in c.evidence:
+            excerpts.setdefault(e.field, e.excerpt)
+    return excerpts
+
+
+def _check_cell(
+    label: str, column: str, field: str, value: Any, excerpts: Mapping[str, str]
+) -> str:
+    """'' when the excerpt cited for `field` equals the DISPLAYED `value`, else a violation."""
+    excerpt = excerpts.get(field)
+    if excerpt is None:
+        return violation(DISPLAY, f"{label}: cell {column!r} field {field!r} has no cited evidence")
+    if str(value) != excerpt:
+        return violation(
+            DISPLAY,
+            f"{label}: cell {column!r} displays {value!r}, field {field!r} cites {excerpt!r}",
+        )
+    return ""
+
+
+def _check_column(
+    label: str, column: str, fields: list[str], displayed: Any, excerpts: Mapping[str, str]
+) -> list[str]:
+    """Every (field, displayed value) pair for one table cell, checked against its excerpt."""
+    values = displayed if isinstance(displayed, list) else [displayed]
+    if len(values) != len(fields):
+        return [
+            violation(
+                DISPLAY,
+                f"{label}: cell {column!r} has {len(values)} displayed value(s) but "
+                f"{len(fields)} cited field(s)",
+            )
+        ]
+    return [
+        v
+        for field, value in zip(fields, values, strict=True)
+        if (v := _check_cell(label, column, field, value, excerpts))
+    ]
+
+
+def check_display(data: list[Datum]) -> list[str]:
+    """New step: every table cell's DISPLAYED value equals the excerpt its `cell_fields` cite --
+    a forged displayed value with an untouched citation would otherwise pass unnoticed, since
+    `check_pointers` only checks the excerpt against the raw record, never against what a viewer
+    actually sees on screen."""
+    found: list[str] = []
+    for datum in data:
+        if datum.row is None:
+            continue
+        cell_fields = datum.row.get("cell_fields")
+        if not cell_fields:
+            continue
+        excerpts = _cited_excerpts(datum.citations)
+        for column, fields in cell_fields.items():
+            found += _check_column(datum.label, column, fields, datum.row.get(column), excerpts)
+    return found
 
 
 def _under(path: str, roots: set[str]) -> bool:

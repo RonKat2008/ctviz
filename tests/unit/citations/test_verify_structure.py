@@ -70,14 +70,15 @@ def _comparison(extra_shared_trial: bool) -> tuple[Any, dict, dict[str, CohortPo
 
     async def _go() -> Any:
         with respx.mock:
-            respx.get(f"{CTGOV_BASE_URL}/studies").mock(
-                side_effect=[
-                    httpx.Response(200, json={"totalCount": len(pembro), "studies": []}),
-                    httpx.Response(200, json={"totalCount": len(pembro), "studies": pembro}),
-                    httpx.Response(200, json={"totalCount": len(nivo), "studies": []}),
-                    httpx.Response(200, json={"totalCount": len(nivo), "studies": nivo}),
-                ]
-            )
+            # One route per cohort: the S7 probe gate probes every cohort before any fetch, so
+            # a single ordered side_effect list no longer matches the call order.
+            for value, studies in (("Pembrolizumab", pembro), ("Nivolumab", nivo)):
+                respx.get(f"{CTGOV_BASE_URL}/studies", params={"query.intr": value}).mock(
+                    side_effect=[
+                        httpx.Response(200, json={"totalCount": len(studies), "studies": []}),
+                        httpx.Response(200, json={"totalCount": len(studies), "studies": studies}),
+                    ]
+                )
             async with CtGovClient() as client:
                 return await run_pipeline(
                     VisualizeRequest(query="Compare by phase"),

@@ -20,6 +20,7 @@ from ctviz.citations.verify_checks import (
     CohortScope,
     RawById,
     check_counts,
+    check_display,
     check_membership,
     check_pointers,
     check_relevance,
@@ -137,6 +138,7 @@ def verify_response(
         *member_found,
         *_guarded("relevance", lambda: check_relevance(data)),
         *_guarded("count", lambda: check_counts(data)),
+        *_guarded("display", lambda: check_display(data)),
         *_guarded("structure", lambda: _structure(meta, data, populations)),
     ]
     if violations:

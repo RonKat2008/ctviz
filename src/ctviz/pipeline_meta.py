@@ -8,6 +8,7 @@ back for `_fetch_one`/`_fetch_cohorts`. `_meta` is the single entry point `run_p
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 
+from ctviz.agent.orchestrator import PlanningOutcome
 from ctviz.agent.overlay import FieldOverride
 from ctviz.agent.planner import Planner
 from ctviz.analysis.aggregate import MatchedTrial
@@ -146,10 +147,18 @@ def _requested_filters(request: VisualizeRequest) -> dict[str, object]:
     return {name: getattr(request, name) for name in names if getattr(request, name) is not None}
 
 
-def _validation_block() -> Validation:
-    """S4's validation block: no probe/judge/revise loop yet, but the shape matches §12.6."""
-    judge = JudgeSummary(status="skipped", model=None, same_family=False, issues=[])
-    return Validation(executed_attempt=1, probe=[], judge=judge, trace=[])
+def _validation_block(outcome: PlanningOutcome) -> Validation:
+    """`meta.validation` (§12.6): executed attempt, probe totals, judge summary, full trace."""
+    judge = JudgeSummary(
+        status=outcome.judge_status,
+        model=outcome.judge_model,
+        same_family=outcome.same_family,
+        issues=outcome.judge_issues,
+    )
+    probe = [{"cohort": label, "total": total} for label, total in outcome.probe_totals.items()]
+    return Validation(
+        executed_attempt=outcome.executed_attempt, probe=probe, judge=judge, trace=outcome.trace
+    )
 
 
 def _provenance(cohorts: list[_CohortFetch], planner: Planner) -> Provenance:
@@ -183,20 +192,48 @@ def _entity_resolution(cohorts: list[_CohortFetch]) -> dict[str, object]:
     }
 
 
-def _empty_cohort_warnings(cohorts: list[_CohortFetch]) -> list[str]:
-    """§10.6: a comparison where one cohort is empty is kept (zero bars), but warned about."""
+def _empty_cohort_warnings(
+    cohorts: list[_CohortFetch], probe_totals: dict[str, int] | None = None
+) -> list[str]:
+    """§10.6: a comparison where one cohort is empty is kept (zero bars), but warned about --
+    once: a cohort the probe already disclosed as 0 on ClinicalTrials.gov isn't repeated (fix J)."""
     if len(cohorts) < 2:
         return []
     return [
         f"cohort '{c.label}' matched 0 trials; kept as zero bars, not dropped"
         for c in cohorts
-        if not c.trials
+        if not c.trials and (probe_totals or {}).get(c.label) != 0
+    ]
+
+
+def _unknown_id_warnings(plan: QueryPlan, cohorts: list[_CohortFetch]) -> list[str]:
+    """Fix G: requested NCT IDs ClinicalTrials.gov returned no record for, named explicitly."""
+    requested = plan.filters.nct_ids if plan.filters and plan.filters.nct_ids else []
+    returned = {t.trial.nct_id for c in cohorts for t in c.trials} | {
+        e.nct_id for c in cohorts for e in c.match_excluded
+    }
+    return [
+        f"{nct_id}: ClinicalTrials.gov returned no record for this ID (it does not exist, or "
+        "the request's other filters exclude it); it is not in the results"
+        for nct_id in requested
+        if nct_id not in returned
+    ]
+
+
+def _warnings(plan: QueryPlan, cohorts: list[_CohortFetch], outcome: PlanningOutcome) -> list[str]:
+    """`meta.warnings`: ambiguous sponsors, empty cohorts (§10.6), unknown NCT IDs, and probe
+    disclosures (§9.1)."""
+    return [
+        *_entity_warnings(plan, cohorts),
+        *_empty_cohort_warnings(cohorts, outcome.probe_totals),
+        *_unknown_id_warnings(plan, cohorts),
+        *outcome.warnings,
     ]
 
 
 def _meta(
     plan: QueryPlan,
-    overrides: list[FieldOverride],
+    outcome: PlanningOutcome,
     cohorts: list[_CohortFetch],
     results: dict[str, AnalysisResult],
     request: VisualizeRequest,
@@ -207,7 +244,6 @@ def _meta(
     cohort_summaries = [_cohort_summary(c, plan, results[c.label]) for c in cohorts]
     single = cohorts[0] if len(cohorts) == 1 else None
     data_coverage = _data_coverage(single, results[single.label]) if single else None
-    validation = _validation_block()
     provenance = _provenance(cohorts, planner)
     return Meta(
         source=SOURCE,
@@ -217,9 +253,9 @@ def _meta(
         grouping=_grouping(plan),
         sort={},
         units={"trial_count": "trials"},
-        assumptions=[*plan.assumptions, *_override_notes(overrides)],
-        warnings=[*_entity_warnings(plan, cohorts), *_empty_cohort_warnings(cohorts)],
-        adjustments=adjustments,
+        assumptions=[*plan.assumptions, *_override_notes(outcome.overrides)],
+        warnings=_warnings(plan, cohorts, outcome),
+        adjustments=[*outcome.adjustments, *adjustments],
         entity_resolution=_entity_resolution(cohorts),
         data_coverage=data_coverage,
         cohorts=cohort_summaries,
@@ -231,7 +267,7 @@ def _meta(
             url_template=CITATION_URL_TEMPLATE,
         ),
         citation_check=None,
-        validation=validation,
+        validation=_validation_block(outcome),
         provenance=provenance,
         timing_ms={},
     )

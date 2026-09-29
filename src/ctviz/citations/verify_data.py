@@ -18,6 +18,7 @@ COMPLETENESS = "completeness"
 STRUCTURE = "structure"
 COUNT = "count"
 PREDICATE = "predicate"
+DISPLAY = "display"
 INTERNAL = "internal"
 
 DatumKind = Literal["row", "node", "edge"]
@@ -48,7 +49,10 @@ class Datum:
     """One visualized datum (bar/bin/time bucket/point/node/edge), normalized for the checks.
 
     `count` is the datum's own stated number (`trial_count` / `weight`), or None when the row
-    shape carries none (a scatter point); `endpoints` is set only for edges."""
+    shape carries none (a scatter point); `endpoints` is set only for edges. `row` is the raw
+    tabular row this datum came from (row kind only) -- kept so `check_display` can compare its
+    own displayed cell values (top-level keys named by `cell_fields`) against the excerpt each
+    cell cites; `None` for node/edge data, which carry no such cells."""
 
     label: str
     kind: DatumKind
@@ -58,6 +62,7 @@ class Datum:
     cohort_label: str | None
     node_id: str | None = None
     endpoints: tuple[str, str] | None = None
+    row: Mapping[str, Any] | None = None
 
 
 def _as_citation(value: Citation | Mapping[str, Any]) -> Citation:
@@ -77,6 +82,7 @@ def _row_datum(row: Mapping[str, Any], index: int, kind: str) -> Datum:
         citations=tuple(_as_citation(c) for c in row.get("citations", ())),
         count=int(count) if count is not None else None,
         cohort_label=row.get("cohort"),
+        row=row,
     )
 
 

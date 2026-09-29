@@ -18,6 +18,7 @@ from ctviz.api.errors import to_response
 from ctviz.config import CTGOV_BASE_URL
 from ctviz.ctgov.client import CtGovClient
 from ctviz.errors import LLMUnavailableError, OutOfScopeError, PlanInvalidError, UpstreamError
+from ctviz.schemas.request import VisualizeRequest
 from tests.factories import make_plan, make_study
 from tests.fixtures.load import load_fixture
 from tests.unit.agent.test_planner import FakeBackend, _fake_backend, _FakeParse, _install
@@ -329,3 +330,80 @@ def test_a_malformed_datum_predicate_fails_closed_as_500_citation_check_failed(
     assert body["error"]["code"] == "CITATION_CHECK_FAILED"
     violations = body["error"]["details"]["violations"]
     assert any(v.startswith("predicate:") and "unknown normalizes_to fn" in v for v in violations)
+
+
+# --- S7: judge dependency + revise-loop endings ------------------------------------------------
+
+
+def test_lifespan_builds_the_judge_once_and_without_a_key_it_reports_unavailable() -> None:
+    # Arrange
+    from ctviz.agent.judge import Judge
+
+    # Act
+    with TestClient(app) as test_client:
+        judge = test_client.app.state.judge
+        review = judge.review(
+            VisualizeRequest(query="Trials by phase"), make_plan(), [], {"pembrolizumab": 1}
+        )
+
+    # Assert
+    assert isinstance(judge, Judge)
+    assert review.available is False
+
+
+def test_visualize_without_an_openrouter_key_still_answers_flagged_unavailable(
+    dependency_overrides: dict,
+) -> None:
+    dependency_overrides[get_planner] = lambda: Planner(FakeBackend(_plan()))
+
+    with respx.mock:
+        _mock_pembrolizumab_studies()
+        with TestClient(app) as test_client:
+            response = test_client.post("/v1/visualize", json=REQUEST_BODY)
+
+    body = response.json()
+    assert body["ok"] is True
+    assert body["meta"]["validation"]["judge"]["status"] == "unavailable"
+
+
+def test_visualize_uses_the_injected_judge(dependency_overrides: dict) -> None:
+    # Arrange
+    from ctviz.agent.judge import Judge
+    from ctviz.api.app import get_judge
+    from tests.unit.agent.test_judge import ScriptedJudgeBackend, issue, verdict
+
+    objection = verdict([issue("major", "visualization.type")])  # search_terms[0] is structured
+    judge = Judge(ScriptedJudgeBackend(objection, objection), model_name="judge-model")
+    dependency_overrides[get_planner] = lambda: Planner(FakeBackend(_plan()))
+    dependency_overrides[get_judge] = lambda: judge
+
+    # Act
+    with respx.mock:
+        _mock_pembrolizumab_studies()
+        with TestClient(app) as test_client:
+            response = test_client.post("/v1/visualize", json=REQUEST_BODY)
+
+    # Assert
+    judge_meta = response.json()["meta"]["validation"]["judge"]
+    assert judge_meta["status"] == "rejected_after_revision"
+    assert judge_meta["model"] == "judge-model"
+    assert len(judge_meta["issues"]) == 1
+
+
+def test_visualize_returns_200_no_matching_trials_for_a_zero_probe(
+    dependency_overrides: dict,
+) -> None:
+    dependency_overrides[get_planner] = lambda: Planner(FakeBackend(_plan()))
+
+    with respx.mock:
+        respx.get(f"{CTGOV_BASE_URL}/studies").mock(
+            return_value=httpx.Response(200, json={"totalCount": 0, "studies": []})
+        )
+        with TestClient(app) as test_client:
+            response = test_client.post("/v1/visualize", json=REQUEST_BODY)
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["ok"] is False and body["visualization"] is None
+    assert body["error"]["code"] == "NO_MATCHING_TRIALS"
+    assert body["error"]["details"]["filters_to_drop"] == ["query.intr='Pembrolizumab'"]

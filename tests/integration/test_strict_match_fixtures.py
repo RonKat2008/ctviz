@@ -16,6 +16,8 @@ GENUINE_PEMBRO_SYNONYMS = frozenset(
     {
         "keytruda",
         "keytruda®",
+        "keytruda ®",  # fix A: object NAMED "Keytruda ®"/"... injectable product" whose
+        "keytruda injectable product",  # otherNames list pembrolizumab (bidirectional)
         "mk-3475",
         "mk 3475",
         "mk3475",
@@ -56,6 +58,11 @@ OFF_TOPIC_NCT_IDS = ("NCT03307785", "NCT06205732")  # named in PLAN.md §11.3
 # explained in `test_strict_match_excludes_exactly_the_pinned_number_of_pembro_trials`).
 PEMBRO_EXCLUDED_AT_MATCH = 325
 PEMBRO_API_TOTAL = 2960
+# Fix A: 2,634 kept for term "Keytruda" vs 2,635 for "pembrolizumab". The 1-trial residual is
+# NCT06949761 ("QLC1101+QL2107"): the biosimilar code QL2107 co-references Keytruda in 68 trials
+# but is a SEPARATE object beside Keytruda (the reference product) in 3 -- vetoed for the brand.
+KEYTRUDA_KEPT = 2634
+KEYTRUDA_KEPT_TOLERANCE = 5
 RESCUED_BEYOND_SPEC_331 = (
     "NCT03523702",  # interventions/0/name "PembroRT"
     "NCT03818893",  # interventions/0/name "Combination of GEN0101 and Pembrolizmub"
@@ -109,6 +116,22 @@ def test_strict_match_excludes_exactly_the_pinned_number_of_pembro_trials() -> N
     assert set(RESCUED_BEYOND_SPEC_331) <= kept
 
 
+def test_a_brand_term_learns_the_generic_name_and_keeps_nearly_the_generic_cohort() -> None:
+    """Fix A (live: "Keytrudda trials by phase" kept 1,632 of 2,960): the term "Keytruda" sits
+    in pembrolizumab objects' otherNames, so "pembrolizumab" is learned bidirectionally and the
+    brand-term cohort lands within KEYTRUDA_KEPT_TOLERANCE of the generic-term cohort."""
+    aliases = discover_aliases(list(load_trials("pembrolizumab")), "Keytruda")
+    outcome = _strict("pembrolizumab", "Keytruda")
+
+    assert "pembrolizumab" in aliases
+    for bad in PARTNERS_AND_CLASSES:
+        assert not any(bad in alias for alias in aliases), bad
+    assert len(outcome.kept) == KEYTRUDA_KEPT
+    assert (
+        PEMBRO_API_TOTAL - PEMBRO_EXCLUDED_AT_MATCH - len(outcome.kept) <= KEYTRUDA_KEPT_TOLERANCE
+    )
+
+
 def test_match_evidence_points_at_a_pembrolizumab_entry_never_a_partner_drug() -> None:
     outcome = _strict("pembrolizumab", "pembrolizumab")
     needles = ("pembrolizumab", *GENUINE_PEMBRO_SYNONYMS)
@@ -121,7 +144,12 @@ def test_match_evidence_points_at_a_pembrolizumab_entry_never_a_partner_drug() -
 
 @pytest.mark.parametrize(
     ("fixture", "term", "other"),
-    [("pembrolizumab", "pembrolizumab", "nivolumab"), ("nivolumab", "nivolumab", "pembrolizumab")],
+    [
+        ("pembrolizumab", "pembrolizumab", "nivolumab"),
+        ("nivolumab", "nivolumab", "pembrolizumab"),
+        ("pembrolizumab", "keytruda", "opdivo"),  # fix A: brand terms learn bidirectionally
+        ("nivolumab", "opdivo", "keytruda"),
+    ],
 )
 def test_compared_cohorts_never_learn_each_other_as_an_alias(
     fixture: str, term: str, other: str

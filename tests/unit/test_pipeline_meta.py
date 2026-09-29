@@ -1,8 +1,10 @@
 """`meta.entity_resolution` shape (item 5): a plain dict, but its keys/shape must stay stable."""
 
+from ctviz.agent.orchestrator import PlanningOutcome
 from ctviz.analysis.aggregate import MatchedTrial
 from ctviz.ctgov.client import FetchResult
-from ctviz.pipeline_meta import _CohortFetch, _entity_resolution
+from ctviz.pipeline_meta import _CohortFetch, _entity_resolution, _warnings
+from tests.factories import make_plan
 from tests.fixtures.load import load_trials
 
 
@@ -47,3 +49,34 @@ def test_entity_resolution_reports_each_cohorts_learned_aliases() -> None:
         "Pembrolizumab": ["keytruda", "mk-3475"],
         "Nivolumab": ["opdivo"],
     }
+
+
+_PROBE_EMPTY = "cohort 'Nivolumab' has 0 trials on ClinicalTrials.gov; it is shown as zero bars"
+
+
+def _outcome(totals: dict[str, int], warnings: list[str]) -> PlanningOutcome:
+    return PlanningOutcome(
+        make_plan(), None, "passed_after_revision", 2, [], probe_totals=totals, warnings=warnings
+    )
+
+
+def test_an_empty_cohort_the_probe_already_disclosed_is_warned_about_once() -> None:
+    """Fix J: the probe's zero-cohort disclosure and the fetch's zero-bars note are one fact."""
+    pembro = [MatchedTrial(t, ()) for t in load_trials("pembrolizumab")[:3]]
+    cohorts = [_cohort("Pembrolizumab", pembro), _cohort("Nivolumab", [])]
+    outcome = _outcome({"Pembrolizumab": 3, "Nivolumab": 0}, [_PROBE_EMPTY])
+
+    warnings = _warnings(outcome.plan, cohorts, outcome)  # type: ignore[arg-type]
+
+    assert [w for w in warnings if "Nivolumab" in w] == [_PROBE_EMPTY]
+
+
+def test_a_cohort_emptied_only_by_strict_match_is_still_warned_about() -> None:
+    """Fix J scope: the probe saw trials (>0) but strict match kept none -> still disclosed."""
+    pembro = [MatchedTrial(t, ()) for t in load_trials("pembrolizumab")[:3]]
+    cohorts = [_cohort("Pembrolizumab", pembro), _cohort("Nivolumab", [])]
+    outcome = _outcome({"Pembrolizumab": 3, "Nivolumab": 4}, [])
+
+    warnings = _warnings(outcome.plan, cohorts, outcome)  # type: ignore[arg-type]
+
+    assert warnings == ["cohort 'Nivolumab' matched 0 trials; kept as zero bars, not dropped"]

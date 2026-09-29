@@ -10,6 +10,7 @@ from fastapi import Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from ctviz.agent.judge import Judge, build_judge
 from ctviz.agent.planner import Planner, build_planner
 from ctviz.api.errors import to_response
 from ctviz.config import get_settings
@@ -24,15 +25,18 @@ log = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
-    """Open one pooled `CtGovClient` and build the planner once for the process (§S4 review).
+    """Open one pooled `CtGovClient` and build the planner and judge once for the process.
 
-    Building the planner here -- not in a per-request dependency -- means a request with an
-    invalid body never has to wait on (or fail from) planner/OpenAI-client construction: the
-    `get_planner` dependency below just returns what was already built. A missing API key still
-    doesn't fail startup: `build_planner` defers that failure to the first `.plan()` call.
+    Building them here -- not in a per-request dependency -- means a request with an invalid
+    body never has to wait on (or fail from) SDK-client construction: the dependencies below just
+    return what was already built. A missing key never fails startup: `build_planner` defers that
+    failure to the first `.plan()` call, and `build_judge` returns a judge that reports
+    "unavailable" on every review, so requests are still answered (fail open, §9.5).
     """
+    settings = get_settings()
     app.state.ctgov_client = CtGovClient()
-    app.state.planner = build_planner(get_settings())
+    app.state.planner = build_planner(settings)
+    app.state.judge = build_judge(settings)
     try:
         yield
     finally:
@@ -52,6 +56,12 @@ def get_planner(request: Request) -> Planner:
     """FastAPI dependency: the process-wide planner built once at startup (overridable)."""
     planner: Planner = request.app.state.planner
     return planner
+
+
+def get_judge(request: Request) -> Judge:
+    """FastAPI dependency: the process-wide judge built once at startup (overridable)."""
+    judge: Judge = request.app.state.judge
+    return judge
 
 
 def _field_error(error: dict[str, Any]) -> str:
@@ -106,7 +116,9 @@ async def health() -> dict[str, object]:
 async def visualize(
     body: VisualizeRequest,
     planner: Annotated[Planner, Depends(get_planner)],
+    judge: Annotated[Judge, Depends(get_judge)],
     client: Annotated[CtGovClient, Depends(get_ctgov_client)],
 ) -> VisualizeResponse:
     """Run the pipeline; failures are mapped by the registered exception handlers above."""
-    return await run_pipeline(body, planner=planner, client=client, today=datetime.now(UTC).date())
+    today = datetime.now(UTC).date()
+    return await run_pipeline(body, planner=planner, judge=judge, client=client, today=today)

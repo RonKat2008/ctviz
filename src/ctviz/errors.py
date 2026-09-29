@@ -17,6 +17,11 @@ class LLMUnavailableError(CtvizError):
     """No LLM provider could produce a plan."""
 
 
+class JudgeUnavailableError(CtvizError):
+    """The judge could not be reached or answered unusably. Never reaches a client: the revise
+    loop fails open on it (`judge.status = "unavailable"`, PLAN.md §9.5)."""
+
+
 class OutOfScopeError(CtvizError):
     """The planner model refused the request outright (§8.3): a domain outcome, not a failure."""
 

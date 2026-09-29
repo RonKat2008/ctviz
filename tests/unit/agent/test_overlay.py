@@ -207,3 +207,39 @@ def test_options_top_n_fills_empty_slot_without_logging_an_override() -> None:
 
     assert new_plan.analysis is not None and new_plan.analysis.top_n == 40
     assert overrides == []
+
+
+def test_structured_slots_names_every_plan_slot_a_structured_field_filled() -> None:
+    # Arrange
+    from ctviz.agent.overlay import structured_slots
+
+    request = VisualizeRequest(
+        query="Trials by phase",
+        drug_name="Pembrolizumab",
+        start_year=2015,
+        country="France",
+        options={"top_n": 5},
+    )
+    llm_terms = [
+        {"param": "query.cond", "value": "melanoma", "source": "query_text", "rationale": "c"},
+        {"param": "query.intr", "value": "keytruda", "source": "query_text", "rationale": "d"},
+    ]
+    plan, _overrides = apply_overlay(make_plan(search_terms=llm_terms), request)
+
+    # Act
+    slots = structured_slots(plan, request)
+
+    # Assert: the LLM's melanoma term (index 0) stays disputable
+    assert [t.value for t in plan.search_terms] == ["melanoma", "Pembrolizumab"]
+    assert slots == frozenset(
+        {"search_terms[1]", "filters.start_year_min", "filters.countries", "analysis.top_n"}
+    )
+
+
+def test_structured_slots_ignores_a_term_the_llm_merely_labelled_structured() -> None:
+    from ctviz.agent.overlay import structured_slots
+
+    forged = [{"param": "query.cond", "value": "x", "source": "structured_field", "rationale": "r"}]
+    request = VisualizeRequest(query="Trials by phase")
+
+    assert structured_slots(make_plan(search_terms=forged), request) == frozenset()

@@ -89,8 +89,9 @@ class _ThreadRecordingBackend:
         return self.plan
 
 
-def _mock_empty_studies(total: int = 0) -> None:
-    """Replay a probe + a single (possibly empty) page, for tests that don't care about data."""
+def _mock_empty_studies(total: int = 1) -> None:
+    """Replay a probe + a single empty page, for tests that don't care about data. The total is
+    non-zero because since S7 a zero probe is (correctly) NO_MATCHING_TRIALS, never a chart."""
     respx.get(f"{CTGOV_BASE_URL}/studies").mock(
         return_value=httpx.Response(200, json={"totalCount": total, "studies": []})
     )

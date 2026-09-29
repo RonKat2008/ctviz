@@ -14,6 +14,7 @@ from collections.abc import Callable
 
 from ctviz.analysis.aggregate import AggregateResult, MatchedTrial
 from ctviz.analysis.guards import GuardResult, apply_guards, graph_to_degree_bar_chart
+from ctviz.analysis.key_facts import key_facts
 from ctviz.analysis.network import Graph, build_graph
 from ctviz.analysis.numeric import Point, histogram, scatter
 from ctviz.analysis.prune import MAX_NODES_DEFAULT, prune
@@ -25,6 +26,7 @@ from ctviz.viz.builder import (
     build_bar_chart,
     build_grouped_bar,
     build_histogram,
+    build_key_facts_table,
     build_metric,
     build_network,
     build_scatter,
@@ -90,6 +92,7 @@ def aggregate_network(
 AGGREGATORS: dict[AnalysisKind, Callable[[list[MatchedTrial], Analysis], AnalysisResult]] = {
     AnalysisKind.HISTOGRAM: _aggregate_histogram,
     AnalysisKind.SCATTER: _aggregate_scatter,
+    AnalysisKind.TRIAL_LOOKUP: lambda trials, _analysis: key_facts(trials),
 }
 
 
@@ -227,6 +230,8 @@ def _build_table_viz(
 ) -> Visualization:
     """The table branch of `_build`, split out to keep `_build` under the complexity cap."""
     result = _as_aggregate(_require_single(results, "table"), "table")
+    if plan.analysis is not None and plan.analysis.kind is AnalysisKind.TRIAL_LOOKUP:
+        return build_key_facts_table(title, result)
     return build_table(title, _dimension_label(plan), result)
 
 
