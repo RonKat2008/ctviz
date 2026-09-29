@@ -9,6 +9,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 CTGOV_BASE_URL = "https://clinicaltrials.gov/api/v2"
 PAGE_SIZE = 1000  # API hard cap per page
 MAX_RECORDS = 20_000  # per-cohort fetch cap (D6)
+# Q1: strict match for conditions only if measured rate >= 97% on the S2 fixtures (see DEVLOG).
+# Measured 2026-09-28: glioblastoma 94.97%, ms_recruiting 87.91%, psoriasis_p2 99.22%.
+CONDITIONS_STRICT = False
 HTTP_TIMEOUT_S = 20.0
 HTTP_CONNECT_TIMEOUT_S = 5.0
 HTTP_RETRIES = 3
