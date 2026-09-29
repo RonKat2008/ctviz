@@ -4,6 +4,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict
 
+from ctviz.schemas.citations import NctId
 from ctviz.schemas.viz import Visualization
 
 SCHEMA_VERSION: Literal["1.0.0"] = "1.0.0"
@@ -38,7 +39,7 @@ class _Meta(BaseModel):
 class ExcludedTrial(_Meta):
     """One trial dropped from the chart, with the stage and reason it was excluded (§12.6)."""
 
-    nct_id: str
+    nct_id: NctId
     stage: Literal["match", "filter", "analysis"]
     reason: str
 
