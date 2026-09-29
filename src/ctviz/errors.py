@@ -17,6 +17,10 @@ class LLMUnavailableError(CtvizError):
     """No LLM provider could produce a plan."""
 
 
+class OutOfScopeError(CtvizError):
+    """The planner model refused the request outright (§8.3): a domain outcome, not a failure."""
+
+
 class PlanInvalidError(CtvizError):
     """The plan still failed deterministic checks after the revise attempt."""
 

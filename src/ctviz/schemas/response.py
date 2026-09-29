@@ -68,6 +68,14 @@ class CohortSummary(_Meta):
     base_predicate: dict[str, Any]
 
 
+class CitationPolicy(_Meta):
+    """How citations are delivered for this response: mode, pointer format, deep-link template."""
+
+    mode: Literal["full", "sample", "none"]
+    pointer_format: Literal["RFC6901"]
+    url_template: str
+
+
 class CitationCheck(_Meta):
     """The independent verifier's result: predicates and evidence re-checked against raw data."""
 
@@ -125,7 +133,7 @@ class Meta(_Meta):
     cohorts: list[CohortSummary]
     overlap: dict[str, Any] | None
     network_summary: dict[str, Any] | None
-    citation_policy: dict[str, Any]
+    citation_policy: CitationPolicy
     citation_check: CitationCheck | None
     validation: Validation
     provenance: Provenance

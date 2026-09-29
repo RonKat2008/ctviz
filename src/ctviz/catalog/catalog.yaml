@@ -1,0 +1,91 @@
+# The API capability catalog the planner reads (PLAN.md §5.10). Hand-curated, validated at
+# startup by ctviz.catalog.loader.load_catalog(). Every SearchParam, Dimension and NetworkType
+# enum member must appear here (test_catalog_lists_every_menu_value enforces this).
+
+search_params:
+  query.intr:
+    provides: >
+      Trials whose interventions (name, other names, arm labels), keywords, intervention MeSH
+      terms or titles mention the term. Drug synonyms are expanded server-side (Keytruda =
+      pembrolizumab = MK-3475). ALSO matches intervention/arm description text, so results can
+      include passing mentions -- these are removed by the strict match check.
+    use_for: [drug, device, procedure, biological]
+    avoid_for: [condition, sponsor]
+  query.cond:
+    provides: >
+      Trials whose condition, title or condition MeSH terms (and ancestor terms) mention the
+      term. The broadest way to search by disease or indication.
+    use_for: [condition, disease, indication]
+    avoid_for: [drug, sponsor]
+  query.lead:
+    provides: "Trials whose LEAD sponsor name matches. Excludes collaborators."
+    use_for: ["sponsor when the question means 'run by' / 'sponsored by'"]
+    avoid_for: [drug, condition]
+  query.spons:
+    provides: "Trials where the organization is lead sponsor OR collaborator (~2x broader than query.lead)."
+    use_for: ["'involving' / 'partnered with' an organization"]
+    avoid_for: [drug, condition]
+  query.locn:
+    provides: "Trials with a matching site city, state, country or facility name."
+    use_for: [location, city, facility]
+    avoid_for: [drug, condition, sponsor]
+  query.titles:
+    provides: "Trials whose acronym, brief title or official title matches (e.g. study nicknames like KEYNOTE)."
+    use_for: [acronym, study nickname]
+    avoid_for: [drug, condition, sponsor]
+  query.outc:
+    provides: "Trials whose primary or secondary outcome measures/descriptions mention the term."
+    use_for: [outcome measure, endpoint]
+    avoid_for: [drug, condition, sponsor]
+  query.term:
+    provides: "A ~35-field union search (broadest, least precise). Last resort only."
+    use_for: ["anything that doesn't fit a more specific param"]
+    avoid_for: [drug, condition, sponsor]
+
+dimensions:
+  phase:
+    provides: "Trial phase; multi-phase trials form their own bucket (e.g. 'Phase 1/Phase 2')."
+  overall_status:
+    provides: "Recruitment status of the trial as a whole (e.g. RECRUITING, COMPLETED)."
+  study_type:
+    provides: "INTERVENTIONAL / OBSERVATIONAL / EXPANDED_ACCESS."
+  lead_sponsor_class:
+    provides: "INDUSTRY / NIH / OTHER / ... -- sponsor category."
+  lead_sponsor:
+    provides: "Lead sponsor organization name (top-N)."
+  intervention_type:
+    provides: "DRUG / DEVICE / BEHAVIORAL / ... counted once per trial."
+  intervention:
+    provides: "Normalized drug/intervention names (top-N)."
+  condition:
+    provides: "Conditions studied (top-N)."
+  country:
+    provides: "Countries with >=1 site; counted once per trial; site-status aware."
+  start_year:
+    provides: "Year the trial started (from its, possibly partial, start date)."
+
+measures:
+  enrollment:
+    provides: "Participants (actual or estimated; type is carried through)."
+  duration_months:
+    provides: "Completion minus start, in months (actual or legacy-untyped dates; estimated excluded)."
+  site_count:
+    provides: "Number of distinct sites."
+
+time_fields: [start_date, primary_completion_date, completion_date]
+
+networks:
+  sponsor_drug:
+    provides: "Lead sponsors linked to drugs they test; edge weight = number of shared trials."
+  drug_drug:
+    provides: "Drugs listed together in the same arm (combination therapy)."
+  condition_drug:
+    provides: "Conditions linked to drugs tested for them."
+
+limits:
+  - "Server-side stats cannot be filtered; all counts are computed by us."
+  - "No pricing, efficacy rankings, or adverse-event rates in this API -- out of scope."
+  - >
+    If a question is unscoped and matches more than 20,000 trials, prefer a narrowing filter
+    the user implied (e.g. intervention type DRUG, interventional studies); otherwise the most
+    recent 20,000 are analyzed.
