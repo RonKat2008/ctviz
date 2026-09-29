@@ -1,9 +1,35 @@
 """Aggregates → visualization models. Deterministic; the only text from the LLM is the title."""
 
 from ctviz.analysis.aggregate import AggregateResult, Bucket
-from ctviz.schemas.viz import BarChart, Channel, GroupedBarChart, Row, TimeSeries
+from ctviz.analysis.network import Graph
+from ctviz.analysis.numeric import Point
+from ctviz.schemas.enums import Measure, NetworkType
+from ctviz.schemas.viz import (
+    BarChart,
+    Channel,
+    GroupedBarChart,
+    Histogram,
+    Metric,
+    NetworkData,
+    NetworkEdge,
+    NetworkGraph,
+    NetworkNode,
+    Row,
+    ScatterPlot,
+    Table,
+    TimeSeries,
+)
 
 SHARE_RATIO_THRESHOLD = 2.0
+MEASURE_TITLES: dict[Measure, str] = {
+    Measure.DURATION_MONTHS: "Duration",
+    Measure.ENROLLMENT: "Enrollment",
+    Measure.SITE_COUNT: "Site count",
+}
+MEASURE_UNITS: dict[Measure, str] = {
+    Measure.DURATION_MONTHS: "months",
+    Measure.ENROLLMENT: "participants",
+}
 
 
 def _row(bucket: Bucket, **keys: object) -> Row:
@@ -84,4 +110,113 @@ def build_grouped_bar(
             "color": Channel(field="cohort", type="nominal", title="Cohort"),
         },
         options={"stacked": False, "normalize": "share" if use_share else "count"},
+    )
+
+
+def build_histogram(title: str, measure_label: str, result: AggregateResult) -> Histogram:
+    """One row per bin; `bin_start`/`bin_end` come from each bucket's `in_range` predicate."""
+    encoding = {
+        "x": Channel(field="bin_start", type="quantitative", title=measure_label, bin=True),
+        "x2": Channel(field="bin_end", type="quantitative"),
+        "y": Channel(field="trial_count", type="quantitative", title="Trials", unit="trials"),
+        "label": Channel(field="bin_label", type="nominal"),
+    }
+    data = [
+        {
+            **_row(b, bin_label=b.key),
+            "bin_start": b.predicate["value"][0],
+            "bin_end": b.predicate["value"][1],
+        }
+        for b in result.buckets
+    ]
+    return Histogram(type="histogram", title=title, encoding=encoding, data=data)
+
+
+def _measure_channel(measure: Measure) -> Channel:
+    """A quantitative channel named and titled after `measure`, with its display unit (§12.4)."""
+    return Channel(
+        field=measure.value,
+        type="quantitative",
+        title=MEASURE_TITLES.get(measure, measure.value.replace("_", " ").title()),
+        unit=MEASURE_UNITS.get(measure),  # type: ignore[arg-type]
+    )
+
+
+def build_scatter(
+    title: str, x_measure: Measure, y_measure: Measure, points: list[Point]
+) -> ScatterPlot:
+    """One row per trial: its two measures keyed by name, the evidence date type, and its own
+    citation. Item 2 (§12.4): row keys and encoding fields are the measure names (e.g.
+    `duration_months`, `enrollment`), not generic `x`/`y`."""
+    encoding = {
+        "x": _measure_channel(x_measure),
+        "y": _measure_channel(y_measure),
+    }
+    data = [
+        {
+            "nct_id": pt.nct_id,
+            x_measure.value: pt.x,
+            y_measure.value: pt.y,
+            "date_type": pt.date_type,
+            "citations": list(pt.citations),
+        }
+        for pt in points
+    ]
+    return ScatterPlot(type="scatter_plot", title=title, encoding=encoding, data=data)
+
+
+def build_metric(title: str, result: AggregateResult) -> Metric:
+    """One or more headline numbers; always an array, even for a single bucket (§12.4)."""
+    encoding = {
+        "value": Channel(field="trial_count", type="quantitative", title="Trials", unit="trials")
+    }
+    data = [_row(b, label=b.key) for b in result.buckets]
+    return Metric(type="metric", title=title, encoding=encoding, data=data)
+
+
+def build_table(title: str, dimension_label: str, result: AggregateResult) -> Table:
+    """A row-per-bucket listing, for degenerate charts a guard has downgraded (§10.6)."""
+    encoding = {
+        "category": Channel(field="category", type="nominal", title=dimension_label),
+        "trial_count": Channel(
+            field="trial_count", type="quantitative", title="Trials", unit="trials"
+        ),
+    }
+    data = [_row(b, category=b.key) for b in result.buckets]
+    return Table(type="table", title=title, encoding=encoding, data=data)
+
+
+def build_network(title: str, graph: Graph, network_type: NetworkType) -> NetworkGraph:
+    """The pruned node/edge graph as a `NetworkGraph` visualization (§12.5)."""
+    nodes = [
+        NetworkNode(
+            id=n.id,
+            label=n.label,
+            type=n.type,
+            weight=n.weight,
+            predicate=n.predicate,
+            citations=list(n.citations),
+        )
+        for n in graph.nodes
+    ]
+    edges = [
+        NetworkEdge(
+            id=e.id,
+            source=e.source,
+            target=e.target,
+            type=e.type,
+            weight=e.weight,
+            predicate=e.predicate,
+            citations=list(e.citations),
+            flags=list(e.flags),
+        )
+        for e in graph.edges
+    ]
+    data = NetworkData(directed=network_type is NetworkType.SPONSOR_DRUG, nodes=nodes, edges=edges)
+    encoding = {
+        "nodes": Channel(field="nodes", type="nominal"),
+        "edges": Channel(field="edges", type="nominal"),
+    }
+    return NetworkGraph(
+        type="network_graph", title=title, encoding=encoding, data=data, options=graph.summary
     )

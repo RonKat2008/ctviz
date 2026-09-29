@@ -12,15 +12,18 @@ def make_study(
     study_type: str = "INTERVENTIONAL",
     start: str | None = None,
     start_type: str | None = "ACTUAL",
+    completion: str | None = None,
+    completion_type: str | None = "ACTUAL",
     status: str = "COMPLETED",
     sponsor: str = "Merck Sharp & Dohme LLC",
     sponsor_class: str = "INDUSTRY",
+    collaborators: list[str] | None = None,
     interventions: list[dict[str, Any]] | None = None,
     arms: list[dict[str, Any]] | None = None,
     conditions: list[str] | None = None,
     locations: list[dict[str, Any]] | None = None,
     enrollment: int | None = None,
-    enrollment_type: str = "ACTUAL",
+    enrollment_type: str | None = "ACTUAL",
     mesh_interventions: list[str] | None = None,
 ) -> dict[str, Any]:
     """Build a raw study shaped exactly like GET /studies output; omitted parts stay absent."""
@@ -35,10 +38,20 @@ def make_study(
             "date": start,
             **({"type": start_type} if start_type else {}),
         }
+    if completion is not None:
+        status_module["completionDateStruct"] = {
+            "date": completion,
+            **({"type": completion_type} if completion_type else {}),
+        }
+    sponsor_collaborators: dict[str, Any] = {
+        "leadSponsor": {"name": sponsor, "class": sponsor_class}
+    }
+    if collaborators is not None:
+        sponsor_collaborators["collaborators"] = [{"name": name} for name in collaborators]
     protocol: dict[str, Any] = {
         "identificationModule": {"nctId": nct_id, "briefTitle": f"Study {nct_id}"},
         "statusModule": status_module,
-        "sponsorCollaboratorsModule": {"leadSponsor": {"name": sponsor, "class": sponsor_class}},
+        "sponsorCollaboratorsModule": sponsor_collaborators,
         "designModule": design,
     }
     if interventions is not None or arms is not None:

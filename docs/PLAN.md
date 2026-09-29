@@ -747,7 +747,7 @@ All `query.*` params AND together. Note that `query.intr` also searches **descri
 | Completion dates | `PrimaryCompletionDate`, `CompletionDate` (+`Type`) | `…primaryCompletionDateStruct`, `…completionDateStruct` | same; **ESTIMATED** for ongoing trials |
 | Phases | `Phase` | `…designModule.phases` | **array**; can hold 2 values; **missing on non-interventional studies** |
 | Study type | `StudyType` | `…designModule.studyType` | enum |
-| Enrollment | `EnrollmentCount`, `EnrollmentType` | `…designModule.enrollmentInfo.{count,type}` | `ESTIMATED` can remain on completed trials; `0` usually means WITHDRAWN (10/10 in psoriasis Phase 2) but also appears on not-yet-enrolled trials |
+| Enrollment | `EnrollmentCount`, `EnrollmentType` | `…designModule.enrollmentInfo.{count,type}` | `ESTIMATED` can remain on completed trials; `0` usually means WITHDRAWN (14/14 in psoriasis Phase 2) but also appears on not-yet-enrolled trials |
 | Lead sponsor | `LeadSponsorName`, `LeadSponsorClass` | `…sponsorCollaboratorsModule.leadSponsor.{name,class}` | class is 0% missing (cleanest field) |
 | Collaborators | `CollaboratorName`, `CollaboratorClass` | `…sponsorCollaboratorsModule.collaborators[]` | often empty |
 | Interventions | `InterventionName`, `InterventionType`, `InterventionOtherName` | `…armsInterventionsModule.interventions[].{name,type,otherNames,armGroupLabels}` | names are noisy (doses, casing; 470 distinct raw spellings contain "pembrolizumab") |
@@ -1360,8 +1360,8 @@ class Trial:
 | **Current / future years** | The bucket for the year of `data_timestamp` gets `flags:["partial_period"]`; later years get `["projected"]` (estimated starts). | Pembro 2026 = 211 (partial), 2027 = 6 (planned) |
 | **Countries** | One count per trial per country. If the plan filters `overall_statuses=[RECRUITING]`, a country counts only if **≥1 site in it has `status=RECRUITING`**. If *all* of a trial's site statuses are null, fall back to the trial-level status (cited as such). | MS: US 159 (any site) vs 157 (recruiting site); 11.4% of trials have mixed site statuses; NCT06472076 has 108 sites, all with null status |
 | **Interventions** | Keep `type` for `intervention_type` counts, **deduped per trial**. For drug nodes keep `DRUG`/`BIOLOGICAL`, drop placebo/SOC/saline, normalize names (§10.4). | T2D: per-trial DRUG = 48.0% vs per-row = 57.1% (a 9-point inflation) |
-| **Enrollment** | Keep count and type. For histograms, **exclude `count=0 AND status=WITHDRAWN`** (analysis exclusion, counted). Other zeros fall into the first bin `[0,10)`. Each bin carries its ACTUAL vs ESTIMATED split. | Psoriasis P2: 10/10 zero-enrollment trials were WITHDRAWN; NCT05809895 shows a not-yet-enrolled zero |
-| **Duration** | From start and completion dates whose type is **ACTUAL or untyped**. Untyped legacy dates are included and flagged `date_type:"untyped"`. **ESTIMATED dates are excluded** (projections aren't durations). Durations under 1 month from month-only dates are excluded as implausible. | Crohn's P3 completed: 120 of 127 usable; only 47 start dates are typed ACTUAL, and 80 are untyped legacy records |
+| **Enrollment** | Keep count and type. For histograms, **exclude `count=0 AND status=WITHDRAWN`** (analysis exclusion, counted). Other zeros fall into the first bin `[0,10)`. Each bin carries its ACTUAL vs ESTIMATED split. | Psoriasis P2: 14/14 zero-enrollment trials were WITHDRAWN; NCT05809895 shows a not-yet-enrolled zero |
+| **Duration** | From start and completion dates whose type is **ACTUAL or untyped**. Untyped legacy dates are included and flagged `date_type:"untyped"`. **ESTIMATED dates are excluded** (projections aren't durations). Durations under 1 month from month-only dates are excluded as implausible. | Crohn's P3 completed: 119 of 127 usable (120 have both measures; 1 same-month duration is excluded as implausible); only 47 start dates are typed ACTUAL, and 80 are untyped legacy records |
 | **Sponsor** | Exact lead name + class; the name-variant census goes into meta (§10.4). | Class has 0% missing |
 | **Missing values** | Never coerced. Either an explicit, **cited** bucket (e.g. "Non-interventional"), or the record is excluded with a per-trial reason at the **analysis** stage (`data_coverage.excluded.analysis`). **There are no uncited buckets.** | Missingness ranges from 0% (lead sponsor class) to ~36% (overall officials) |
 
@@ -1895,8 +1895,8 @@ Every row is covered by **the same pipeline**, with no per-query code. Counts ar
 | 7 | "Which countries have the most recruiting trials for multiple sclerosis?" | geographic | `query.cond` + `RECRUITING`; `count_by country` | `bar_chart` (horizontal) | 430 | 0.41 s | recruiting-site rule (US 157 vs 159) |
 | 8 | "Network of sponsors ↔ drugs for glioblastoma" | network | `network sponsor_drug` | `network_graph` | 2,268 | 1.75 s | DRUG/BIOLOGICAL only, placebo out; ≤ 50 nodes / ≤ 150 edges |
 | 9 | "Which drugs co-occur in NSCLC combination studies?" | network | `query.cond=non-small cell lung cancer`; `network drug_drug` | `network_graph` | 8,572 | 6.70 s | same-arm co-listing (5,578 vs 9,079 distinct pairs) |
-| 10 | "Enrollment vs duration for completed Phase 3 Crohn's trials" | relationship | `scatter(duration_months, enrollment)` | `scatter_plot` | 127 (120 usable) | 0.26 s | ESTIMATED dates excluded; 80 untyped legacy start dates included and flagged |
-| 11 | "Distribution of enrollment sizes for Phase 2 psoriasis trials" | numeric distribution | `histogram(enrollment)` | `histogram` (log bins) | 512 | 0.47 s | skewness 6.25 → log bins; 10 withdrawn zeros excluded |
+| 10 | "Enrollment vs duration for completed Phase 3 Crohn's trials" | relationship | `scatter(duration_months, enrollment)` | `scatter_plot` | 127 (119 usable) | 0.26 s | ESTIMATED dates excluded; 80 untyped legacy start dates included and flagged |
+| 11 | "Distribution of enrollment sizes for Phase 2 psoriasis trials" | numeric distribution | `histogram(enrollment)` | `histogram` (log bins) | 512 | 0.47 s | skewness 6.25 → log bins; 14 withdrawn zeros + 2 missing enrollment excluded (496 plotted) |
 | 12 | "Which sites are most connected in CAR-T trials?" *(S1)* | network | `query.term=CAR-T`, `network site_site` | `network_graph` | 2,925 | 2.40 s | step-0 pre-selection; placeholders removed |
 | 13 | "Share of Merck's Phase 3 trials completed vs terminated" | distribution + entity | `query.lead=Merck`, phase 3, `count_by overall_status` | `bar_chart` | **837** (2,746 all phases) | — | sponsor census warns: MSD vs Merck KGaA |
 | 14 | "What is the status of NCT04368728?" | lookup | fast path (no LLM) | `metric` / `table` | 1 | < 1 s | every cell cited |
@@ -2272,9 +2272,9 @@ All figures are from live ClinicalTrials.gov API v2.0.5 calls on 2026-09-28 (unq
 | Glioblastoma sponsor↔drug raw; threshold-only min-weight 2 / 3 | 655 sponsors + 1,391 drugs / 2,345 edges; 304 nodes / 288 edges; 91 / 87 |
 | NSCLC (unquoted phrase); drug↔drug distinct pairs, trial-level vs arm-level | 8,572; 9,079 vs 5,578 |
 | Pembro + lenvatinib trials with arm-level evidence | 140 / 145 (96.6%) |
-| Crohn's P3 completed; usable scatter points; start dates typed ACTUAL / untyped | 127; 120; 47 / 80 |
+| Crohn's P3 completed; usable scatter points; start dates typed ACTUAL / untyped | 127; 119; 47 / 80 |
 | Month-only date fields, Crohn's P3 completed | 158 / 254 (~62%) |
-| Psoriasis P2; enrollment skewness; withdrawn zeros | 512; 6.25; 10 |
+| Psoriasis P2; enrollment skewness; withdrawn zeros | 512; 6.25; 14 |
 | CAR-T (`query.term`); officials present / locations present | 2,925; 64.4% / 93.0% |
 | "Merck": spons / lead / exact MSD / lead + Phase 3 | 5,222 / 2,746 / 2,180 / 837; 24 distinct lead names across 2 unrelated companies |
 | Whole-corpus INDUSTRY / DRUG-type / `query.term=combination` / `query.cond=oncology` | 132,634 / 212,652 / 95,333 / 123,688 |

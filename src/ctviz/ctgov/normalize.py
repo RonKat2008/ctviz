@@ -4,6 +4,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
+from ctviz.common.names import normalize_drug
+
 PHASE_ORDER = ("EARLY_PHASE1", "PHASE1", "PHASE2", "PHASE3", "PHASE4")
 PHASE_NAMES = {
     "EARLY_PHASE1": "Early Phase 1",
@@ -57,8 +59,29 @@ class Site:
 
     index: int
     facility: str | None
+    city: str | None
     country: str | None
     status: str | None
+
+
+@dataclass(frozen=True)
+class Arm:
+    """One armGroups[] entry, keeping its original array index and raw intervention names."""
+
+    index: int
+    label: str | None
+    type: str | None
+    intervention_names: tuple[str, ...]
+
+    @property
+    def drug_keys(self) -> tuple[str, ...]:
+        """Normalized drug keys in this arm, deduped in first-seen order (placebo dropped)."""
+        seen: dict[str, None] = {}
+        for name in self.intervention_names:
+            key = normalize_drug(name)
+            if key is not None:
+                seen.setdefault(key, None)
+        return tuple(seen)
 
 
 @dataclass(frozen=True)
@@ -77,7 +100,9 @@ class Trial:
     enrollment_type: str | None
     lead_sponsor: str | None
     lead_sponsor_class: str | None
+    collaborators: tuple[tuple[int, str], ...]  # (ORIGINAL array index, name); item 13
     interventions: tuple[Intervention, ...]
+    arms: tuple[Arm, ...]
     conditions: tuple[str, ...]
     sites: tuple[Site, ...]
     raw: Mapping[str, Any]
@@ -145,10 +170,36 @@ def _sites(protocol: Mapping[str, Any]) -> tuple[Site, ...]:
     locations = protocol.get("contactsLocationsModule", {}).get("locations", [])
     return tuple(
         Site(
-            i, _clean_text(loc.get("facility")), _clean_text(loc.get("country")), loc.get("status")
+            i,
+            _clean_text(loc.get("facility")),
+            _clean_text(loc.get("city")),
+            _clean_text(loc.get("country")),
+            loc.get("status"),
         )
         for i, loc in enumerate(locations)
     )
+
+
+def _arms(arms_module: Mapping[str, Any]) -> tuple[Arm, ...]:
+    """Flatten the arms-interventions-module arm groups, keeping their original array indices."""
+    return tuple(
+        Arm(
+            i,
+            _clean_text(item.get("label")),
+            item.get("type"),
+            tuple(item.get("interventionNames", [])),
+        )
+        for i, item in enumerate(arms_module.get("armGroups", []))
+    )
+
+
+def _collaborators(protocol: Mapping[str, Any]) -> tuple[tuple[int, str], ...]:
+    """Flatten the sponsor-collaborators-module list, keeping each survivor's ORIGINAL array
+    index (item 13): a collaborator with no name is dropped, but that must not shift the index
+    of the ones after it, or a citation pointer built from the filtered position is wrong."""
+    collabs = protocol.get("sponsorCollaboratorsModule", {}).get("collaborators", [])
+    indexed = ((i, _clean_text(c.get("name"))) for i, c in enumerate(collabs))
+    return tuple((i, name) for i, name in indexed if name is not None)
 
 
 def normalize(raw: Mapping[str, Any]) -> Trial:
@@ -160,6 +211,7 @@ def normalize(raw: Mapping[str, Any]) -> Trial:
     sponsor = protocol.get("sponsorCollaboratorsModule", {}).get("leadSponsor", {})
     enrollment = design.get("enrollmentInfo", {})
     phases = design.get("phases")
+    arms_module = protocol.get("armsInterventionsModule", {})
     return Trial(
         nct_id=ident["nctId"],
         title=ident.get("briefTitle", ""),
@@ -173,7 +225,9 @@ def normalize(raw: Mapping[str, Any]) -> Trial:
         enrollment_type=enrollment.get("type"),
         lead_sponsor=_clean_text(sponsor.get("name")),
         lead_sponsor_class=sponsor.get("class"),
-        interventions=_interventions(protocol.get("armsInterventionsModule", {})),
+        collaborators=_collaborators(protocol),
+        interventions=_interventions(arms_module),
+        arms=_arms(arms_module),
         conditions=_conditions(protocol),
         sites=_sites(protocol),
         raw=raw,

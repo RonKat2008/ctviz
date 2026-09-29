@@ -80,3 +80,55 @@ def test_normalize_strips_stray_whitespace_from_sponsor_and_intervention_names()
     assert trial.lead_sponsor == "Merck Sharp & Dohme LLC"
     assert trial.interventions[0].name == "Pembrolizumab"
     assert trial.conditions[0] == "Melanoma"
+
+
+def test_normalize_extracts_collaborators() -> None:
+    raw = make_study(collaborators=["National Cancer Institute", "Merck KGaA"])
+
+    trial = normalize(raw)
+
+    assert trial.collaborators == ((0, "National Cancer Institute"), (1, "Merck KGaA"))
+
+
+def test_normalize_defaults_collaborators_to_empty_tuple_when_absent() -> None:
+    assert normalize(make_study()).collaborators == ()
+
+
+def test_normalize_keeps_original_collaborator_indices_after_dropping_a_none_name() -> None:
+    """Item 13: a collaborator with no name is dropped, but that must not shift the ORIGINAL
+    array index of the ones after it -- a citation pointer built from the wrong index is wrong."""
+    raw = make_study()
+    raw["protocolSection"]["sponsorCollaboratorsModule"]["collaborators"] = [
+        {"name": "National Cancer Institute"},
+        {"name": None},
+        {"name": "Merck KGaA"},
+    ]
+
+    trial = normalize(raw)
+
+    assert trial.collaborators == ((0, "National Cancer Institute"), (2, "Merck KGaA"))
+
+
+def test_normalize_extracts_arm_groups_with_index_and_drug_keys() -> None:
+    raw = make_study(
+        arms=[
+            {"label": "Arm A", "interventionNames": ["Drug: Carboplatin", "Drug: Placebo"]},
+            {"label": "Arm B", "interventionNames": ["Drug: Docetaxel 75 mg/m2"]},
+        ]
+    )
+
+    trial = normalize(raw)
+
+    assert [a.index for a in trial.arms] == [0, 1]
+    assert trial.arms[0].label == "Arm A"
+    assert trial.arms[0].intervention_names == ("Drug: Carboplatin", "Drug: Placebo")
+    assert trial.arms[0].drug_keys == ("carboplatin",)  # placebo dropped
+    assert trial.arms[1].drug_keys == ("docetaxel",)  # dose phrase stripped
+
+
+def test_normalize_extracts_site_city() -> None:
+    raw = make_study(locations=[{"city": "Boston", "country": "United States"}])
+
+    trial = normalize(raw)
+
+    assert trial.sites[0].city == "Boston"

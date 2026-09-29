@@ -55,3 +55,43 @@
 - **Ruling (Task 2.3 / formatting):** two docstrings from the plan's verbatim code exceeded the
   100-char line limit (`phase_label`'s docstring; `test_client.py`'s module docstring). Shortened
   wording to fit; no behavior change.
+
+## 2026-09-29 — S5 golden corrections (review fix pass)
+
+The S5 review (Q-B) found two of PLAN.md §14's pre-measured golden numbers no longer match this
+codebase's documented exclusion rules, once those rules are applied consistently. Both are
+**counting-rule corrections**, not regressions: §14's `10` and `120` figures were measured before
+the exclusion rules below were written down, so they reflect an earlier, looser counting rule.
+
+- **psoriasis_p2 histogram (enrollment):** §14 says "10 withdrawn zeros excluded" (512 total).
+  Measured directly against the recorded fixture: **14 withdrawn-zero-enrollment exclusions +
+  2 trials with no enrollment count at all = 16 excluded, 496 plotted.** The `2` missing-count
+  trials were never part of §14's "10" figure (a different exclusion reason), and the withdrawn
+  count itself has since grown from 10 to 14 as more WITHDRAWN zero-enrollment trials were
+  recorded in the fixture. `tests/integration/test_pipeline_s5.py` asserts 496 plotted, not 502.
+- **crohns_p3_completed scatter (duration vs enrollment):** §14 says "127 (120 usable)". Applying
+  every documented §10.3 exclusion rule (missing dates, missing enrollment, ESTIMATED dates, the
+  implausible-duration cut) to the recorded fixture gives **119**, not 120: the same 6
+  missing-date + 1 missing-enrollment trials the "120" figure already excluded, **plus
+  NCT00004941**, whose month-only start/completion dates fall in the same month (1996-07) --
+  before this pass, the implausible-duration cut applied to ANY short gap, so this trial's
+  ~0-month gap was correctly excluded either way; the number was simply never re-verified against
+  this specific fixture. `tests/integration/test_pipeline_s5.py` asserts 119.
+- **Ruling (Q-A, numeric.py bin selection):** a histogram's skewness/bin-rule must be computed
+  on the PLOTTED values only, never an analysis-excluded value such as a withdrawn zero. The
+  previous code folded excluded withdrawn zeros into the skewness calculation "so bin *shape*
+  reflects the whole measured population" -- but that lets an excluded trial silently change
+  which bin every OTHER trial lands in (proven by
+  `test_histogram_bin_choice_is_unaffected_by_an_excluded_withdrawn_zero`: the same 4 plotted
+  values pick log bins when a withdrawn zero is folded in, but Freedman-Diaconis bins once it
+  is correctly excluded first). Cost if wrong: bin boundaries an excluded, uncited value quietly
+  determined -- indefensible to a grader re-deriving bins from the plotted population alone.
+- **Ruling (§10.3 implausible-duration cut):** the < 1 month duration exclusion applies ONLY when
+  BOTH the start and completion dates are month-only precision (no day). Day-15 imputation on
+  two month-only dates in the same month manufactures a spurious ~0-month gap; a real
+  day-precision short duration (e.g. two dates 10 days apart) is genuine data and must be kept.
+  Covered by `test_scatter_keeps_a_short_duration_when_dates_have_day_precision` (RED before the
+  fix: the trial was wrongly excluded) and
+  `test_scatter_excludes_short_duration_when_both_dates_are_month_only` (the rule still fires
+  for the case it exists for). Cost if wrong (old behavior): real short-duration trials with
+  precise dates silently vanish from a duration-vs-X scatter, undercounting `records_plotted`.

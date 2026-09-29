@@ -45,6 +45,24 @@ def test_top_n_rolls_the_rest_into_a_cited_other_row() -> None:
     assert "not" in result.buckets[-1].predicate
 
 
+def test_other_row_never_double_cites_a_trial_that_folds_into_two_multi_valued_keys() -> None:
+    """A trial with sites in 3 rare countries all folded into 'Other' must appear once, not 3x
+    (multi-valued dims can put one trial in several folded keys; the rollup still dedupes)."""
+    trials = _matched(
+        make_study(
+            "NCT00000001",
+            locations=[{"country": "Andorra"}, {"country": "Monaco"}, {"country": "Fiji"}],
+        )
+    )
+
+    result = count_by(trials, Dimension.COUNTRY, top_n=1)
+
+    other = next(b for b in result.buckets if b.key == "Other")
+    ids = [c.nct_id for c in other.citations]
+    assert ids == ["NCT00000001"]
+    assert other.trial_count == 1
+
+
 def test_citation_for_multiphase_trial_carries_extra_bucket_and_match_evidence() -> None:
     match_evidence = (Evidence(role="match", field="/x", excerpt="pembrolizumab"),)
     trial = normalize(make_study("NCT00000001", phases=["PHASE2", "PHASE3"]))

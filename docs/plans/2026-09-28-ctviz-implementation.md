@@ -2833,8 +2833,8 @@ def test_short_time_series_becomes_bar_chart() -> None:
 - [ ] **Step 3: Add the builder functions** for histogram (`x`=`bin_start` with `bin: true`, `x2`=`bin_end`, `y`=`trial_count`, `label`=`bin_label`), scatter (one row per trial with `nct_id`), metric and table. Test that each validates through the `Visualization` union.
 
 - [ ] **Step 4: Golden tests** on fixtures:
-  - `psoriasis_p2` has 10 withdrawn zeros excluded, and log bins are chosen;
-  - `crohns_p3_completed` has 120 scatter points.
+  - `psoriasis_p2` has 14 withdrawn zeros excluded (plus 2 missing enrollment; 496 plotted), and log bins are chosen;
+  - `crohns_p3_completed` has 119 scatter points (1 same-month duration excluded as implausible).
 
   Then run `make check`.
 

@@ -1,6 +1,7 @@
 """Aggregation where counting and citing are one step: a trial joins a bucket with its evidence."""
 
 from collections import defaultdict
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 
 from ctviz.analysis.dimensions import DimensionHit, extract
@@ -65,14 +66,17 @@ def _citation(matched: MatchedTrial, hit: DimensionHit) -> Citation:
 
 
 def _group(
-    trials: list[MatchedTrial], dimension: Dimension
+    trials: list[MatchedTrial],
+    dimension: Dimension,
+    extractor: Callable[[Trial], list[DimensionHit]] | None = None,
 ) -> tuple[dict[str, list[Citation]], dict[str, Predicate], dict[str, str]]:
     """Bucket every trial's citations by key, recording each key's predicate once."""
+    extract_fn = extractor or (lambda t: extract(t, dimension))
     citations: dict[str, list[Citation]] = defaultdict(list)
     predicates: dict[str, Predicate] = {}
     excluded: dict[str, str] = {}
     for matched in trials:
-        hits = extract(matched.trial, dimension)
+        hits = extract_fn(matched.trial)
         if not hits:
             excluded[matched.trial.nct_id] = MISSING_REASON.get(dimension, DEFAULT_MISSING_REASON)
         for hit in hits:
@@ -96,11 +100,14 @@ def _order(keys: list[str], counts: dict[str, int], dimension: Dimension) -> lis
 
 
 def count_by(
-    trials: list[MatchedTrial], dimension: Dimension, top_n: int | None = None
+    trials: list[MatchedTrial],
+    dimension: Dimension,
+    top_n: int | None = None,
+    extractor: Callable[[Trial], list[DimensionHit]] | None = None,
 ) -> AggregateResult:
     """Distinct trials per category: top-N LARGEST by count, then a cited 'Other' row, in
-    display order."""
-    citations, predicates, excluded = _group(trials, dimension)
+    display order. `extractor` overrides the registered one (e.g. the recruiting-site rule)."""
+    citations, predicates, excluded = _group(trials, dimension, extractor)
     counts = {k: len(v) for k, v in citations.items()}
     ranked = _count_rank(list(citations), counts)
     keep, rest = (ranked[:top_n], ranked[top_n:]) if top_n else (ranked, [])
@@ -108,10 +115,19 @@ def count_by(
     buckets = [Bucket(k, predicates[k], tuple(citations[k])) for k in ordered_keep]
     if rest:
         other_predicate = {"not": {"any": [predicates[k] for k in keep]}}
-        other_citations = tuple(c for k in rest for c in citations[k])
+        other_citations = _dedupe_by_nct_id(c for k in rest for c in citations[k])
         other = Bucket(OTHER_KEY, other_predicate, other_citations, folded_categories=len(rest))
         buckets.append(other)
     return AggregateResult(tuple(buckets), excluded)
+
+
+def _dedupe_by_nct_id(citations: Iterable[Citation]) -> tuple[Citation, ...]:
+    """First citation per trial, in encounter order: a multi-valued dim can fold the same trial
+    into several rolled-up keys, but the 'Other' row must still cite it only once (§11.6)."""
+    first: dict[str, Citation] = {}
+    for citation in citations:
+        first.setdefault(citation.nct_id, citation)
+    return tuple(first.values())
 
 
 def time_trend(trials: list[MatchedTrial], today_year: int) -> AggregateResult:

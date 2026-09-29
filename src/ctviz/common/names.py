@@ -24,6 +24,12 @@ def text_matches(text: str | list[str], term: str) -> bool:
     return any(needle in normalize_text(item) for item in items if isinstance(item, str))
 
 
+def strip_drug_prefix(raw: str) -> str:
+    """Display-only: drop a leading 'Drug: '/'Biological: '-style prefix (item 12); dosage and
+    brackets are left alone -- this is for a node LABEL, `normalize_drug` owns the match KEY."""
+    return _PREFIX.sub("", raw.strip(), count=1)
+
+
 def normalize_drug(raw: str) -> str | None:
     """Canonical drug key: strip type prefix, brackets and doses; None for placebo/SOC."""
     text = _PREFIX.sub("", raw.strip())
